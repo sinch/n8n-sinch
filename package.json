@@ -1,0 +1,77 @@
+{
+  "name": "@sinch-engage/n8n-nodes-sinch-conversations",
+  "version": "1.0.0-alpha-0",
+  "description": "n8n community node for Sinch Conversations API - send and manage omnichannel messages",
+  "keywords": [
+    "n8n-community-node",
+    "n8n-nodes",
+    "sinch",
+    "conversations",
+    "sms",
+    "whatsapp",
+    "messaging",
+    "omnichannel"
+  ],
+  "license": "MIT",
+  "author": "Sinch Engage",
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "n8n": {
+    "nodes": [
+      "dist/nodes/SinchConversations/SinchConversations.node.js"
+    ],
+    "credentials": [
+      "dist/credentials/SinchConversationsApi.credentials.js"
+    ]
+  },
+  "directories": {
+    "example": "examples",
+    "test": "tests"
+  },
+  "files": [
+    "dist/**/*",
+    "src/**/*",
+    "tests/**/*",
+    "examples/**/*",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && npm run copy:icons",
+    "copy:icons": "mkdir -p dist/nodes/SinchConversations && cp -f src/nodes/SinchConversations/*.png src/nodes/SinchConversations/*.svg dist/nodes/SinchConversations/ 2>/dev/null || true",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0 --fix",
+    "test": "vitest run",
+    "dev:test": "vitest",
+    "prepare": "npm run build"
+  },
+  "dependencies": {
+    "google-libphonenumber": "^3.2.43",
+    "i18n-iso-countries": "^7.14.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.9",
+    "@typescript-eslint/eslint-plugin": "^7.16.0",
+    "@typescript-eslint/parser": "^7.16.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "n8n-core": "^1.0.0",
+    "n8n-workflow": "^1.0.0",
+    "nock": "^13.4.0",
+    "node-fetch": "^2.6.9",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.3",
+    "vitest": "^1.6.0"
+  },
+  "peerDependencies": {
+    "n8n-core": ">=1.0.0",
+    "n8n-workflow": ">=1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+
+

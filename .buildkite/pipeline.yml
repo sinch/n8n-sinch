@@ -1,0 +1,21 @@
+steps:
+  - label: ":mag: Lint"
+    commands:
+      - "bash deploy/ci-run.sh lint"
+    key: lint
+    agents:
+      queue: "connectors-stg-ap-southeast-2"
+
+  - label: ":hammer: Build"
+    commands:
+      - "bash deploy/ci-run.sh build"
+    key: build
+    agents:
+      queue: "connectors-stg-ap-southeast-2"
+
+  - label: ":test_tube: Test"
+    commands:
+      - "bash deploy/ci-run.sh test"
+    key: test
+    agents:
+      queue: "connectors-stg-ap-southeast-2"
