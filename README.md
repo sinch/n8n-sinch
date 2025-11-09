@@ -1,93 +1,235 @@
-# n8n-build
+# n8n-nodes-sinch-conversations
 
+Community node for n8n to send and manage omnichannel messages via Sinch Build Conversations API.
 
+## ✨ Features
 
-## Getting started
+- **Send SMS messages** via Sinch Build Conversations API
+- **List messages** with filtering and pagination
+- **OAuth2.0 authentication** with automatic token management (recommended for production)
+- **Basic authentication** support for testing
+- **Multi-region support** (US, EU, BR)
+- **Phone number normalization** to E.164 format
+- **Robust error handling** and validation
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+## 🎯 Node Configuration
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+### Basic Information
 
-## Add your files
+- **Display Name**: Sinch Build
+- **Name**: `sinchConversations`
+- **Group**: `transform`
+- **Inputs**: `main`
+- **Outputs**: `main`
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+### Operations
 
+#### Send Message
+
+Send SMS messages via Sinch Build Conversations API.
+
+**Fields:**
+- **To** (required) - Recipient phone number in E.164 format (e.g., +15551234567)
+- **Country** (optional) - Country for parsing local phone numbers without international prefix
+- **Message** (required, up to 1600 characters) - Message text to send
+- **Callback URL** (optional) - Webhook URL for delivery status updates
+- **Metadata** (optional) - Custom metadata to associate with the message (up to 1024 characters)
+
+#### List Messages
+
+List and filter messages from conversations.
+
+**Filters:**
+- **Contact ID** - Filter by contact ID
+- **Conversation ID** - Filter by conversation ID
+- **Start Time** - Filter messages after this timestamp
+- **End Time** - Filter messages before this timestamp
+- **Page Size** - Number of messages to return (max 1000, default: 10)
+- **Channel** - Filter by channel (SMS, WhatsApp, RCS)
+
+## 🔐 Credentials
+
+### Sinch Build Conversations API
+
+**Required Fields:**
+- **Authentication Method** - OAuth2.0 (recommended) or Basic Authentication
+- **Key ID (Client ID)** - Your Sinch API Key ID from the dashboard
+- **Key Secret (Client Secret)** - Your Sinch API Key Secret from the dashboard
+- **Region** - Region where your Conversation API app was created (US, EU, or BR)
+- **Project ID** - Your Sinch Project ID from the dashboard
+- **App ID** - Your Sinch Conversation API App ID
+
+### Getting Your Credentials
+
+1. Create a Sinch account at https://dashboard.sinch.com
+2. Create a project
+3. Generate API keys in Settings → Access Keys
+4. Create a Conversation API app
+5. Note your Project ID and App ID
+
+## 📱 Sinch Build Conversations API Integration
+
+### API Endpoints
+
+- **US**: `https://us.conversation.api.sinch.com`
+- **EU**: `https://eu.conversation.api.sinch.com`
+- **BR**: `https://br.conversation.api.sinch.com`
+
+### Send Message
+
+**Endpoint**: `POST /v1/projects/{projectId}/messages:send`
+
+**Request Body:**
+```json
+{
+  "app_id": "your-app-id",
+  "recipient": {
+    "identified_by": {
+      "channel_identities": [
+        {
+          "channel": "SMS",
+          "identity": "+15551234567"
+        }
+      ]
+    }
+  },
+  "message": {
+    "text_message": {
+      "text": "Hello from n8n!"
+    }
+  },
+  "channel_priority_order": ["SMS"],
+  "callback_url": "https://webhook.site/...",
+  "message_metadata": "custom-id-123"
+}
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/sinch/sinch-projects/applications/smb/teams/next_messaging/n8n-build.git
-git branch -M main
-git push -uf origin main
+
+**Response:**
+```json
+{
+  "message_id": "msg-123",
+  "accepted_time": "2024-01-01T00:00:00Z"
+}
 ```
 
-## Integrate with your tools
+### List Messages
 
-- [ ] [Set up project integrations](https://gitlab.com/sinch/sinch-projects/applications/smb/teams/next_messaging/n8n-build/-/settings/integrations)
+**Endpoint**: `GET /v1/projects/{projectId}/messages`
 
-## Collaborate with your team
+**Query Parameters:**
+- `app_id` (required)
+- `contact_id` (optional)
+- `conversation_id` (optional)
+- `start_time` (optional, ISO 8601)
+- `end_time` (optional, ISO 8601)
+- `page_size` (optional, max 1000)
+- `channel` (optional)
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+## 🔄 Authentication
 
-## Test and Deploy
+### OAuth2.0 (Recommended)
 
-Use the built-in continuous integration in GitLab.
+OAuth2.0 authentication is automatically handled:
+1. Tokens are fetched from `https://auth.sinch.com/oauth2/token`
+2. Tokens are cached for 55 minutes (5-minute buffer before expiry)
+3. Tokens are automatically refreshed when expired
+4. Bearer tokens are used in Authorization headers
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+### Basic Authentication
 
-***
+Basic authentication is available for testing:
+- Uses Key ID and Key Secret directly in Authorization header
+- No token caching
+- Rate limited by Sinch API
 
-# Editing this README
+## 📞 Phone Number Format
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+### E.164 Format
 
-## Suggestions for a good README
+Phone numbers must be in E.164 format:
+- **International format**: `+15551234567`
+- **Local format**: `5551234567` (requires Country field)
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+### Supported Formats
 
-## Name
-Choose a self-explaining name for your project.
+- `+15551234567` (international format)
+- `15551234567` with Country = US → `+15551234567`
+- `0437536808` with Country = AU → `+61437536808`
+- `00` prefix is automatically converted to `+`
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+## 📋 Example Workflow
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+```json
+{
+  "name": "Send SMS via Sinch Build Conversations",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "to": "+15551234567",
+        "message": "Hello from n8n!",
+        "additionalFields": {
+          "callbackUrl": "https://webhook.site/unique-id"
+        }
+      },
+      "type": "@sinch-engage/n8n-nodes-sinch-conversations.sinchConversations",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "id": "abc123",
+      "name": "Sinch Build Conversations",
+      "credentials": {
+        "sinchConversationsApi": {
+          "id": "1",
+          "name": "Sinch Build Conversations API"
+        }
+      }
+    }
+  ],
+  "connections": {}
+}
+```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+## 🛠️ Troubleshooting
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+### Common Issues
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+- **401 Unauthorized**: Check your Key ID and Key Secret
+- **403 Forbidden**: Verify your Project ID matches the credentials
+- **404 Not Found**: Verify your App ID exists and region matches
+- **429 Rate Limit**: Implement backoff or check Sinch API rate limits
+- **Invalid phone number**: Ensure phone number is in E.164 format or provide Country field
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+### Error Codes
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+| HTTP Code | Sinch Status | Description | Resolution |
+|-----------|--------------|-------------|------------|
+| 400 | INVALID_ARGUMENT | Malformed request body | Check app_id, project_id, message format |
+| 401 | UNAUTHENTICATED | Invalid credentials | Verify Key ID and Secret |
+| 403 | UNAUTHORIZED | No access to resource | Check project_id matches credentials |
+| 404 | NOT_FOUND | Resource not found | Verify app_id exists, region matches |
+| 429 | RESOURCE_EXHAUSTED | Rate limit exceeded | Implement backoff, check rate limits |
+| 500 | INTERNAL | Server error | Retry with exponential backoff |
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## 📚 Resources
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+- **Sinch Build Conversations API Docs**: https://developers.sinch.com/docs/conversation/
+- **Send Message Endpoint**: https://developers.sinch.com/docs/conversation/api-reference/conversation/messages/messages_sendmessage
+- **List Messages Endpoint**: https://developers.sinch.com/docs/conversation/api-reference/conversation/messages/messages_listmessages
+- **OAuth2.0 Guide**: https://developers.sinch.com/docs/conversation/api-reference/conversation/#oauth20-authentication
+- **Sinch Dashboard**: https://dashboard.sinch.com
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## 📄 License
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+MIT License
 
-## License
-For open source projects, say how it is licensed.
+## 🤝 Contributing
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+This is a Sinch internal project. For questions or contributions:
+1. Review documentation thoroughly
+2. Follow established patterns from n8n-engage
+3. Maintain code quality standards
+4. Write comprehensive tests
+5. Update documentation with changes
+
+
