@@ -1,5 +1,4 @@
 import type {
-  IAuthenticateGeneric,
   ICredentialTestRequest,
   ICredentialType,
   INodeProperties,
@@ -64,22 +63,18 @@ export class SinchBuildConversationsApi implements ICredentialType {
     },
   ];
 
-  authenticate: IAuthenticateGeneric = {
-    type: 'generic',
-    properties: {
-      auth: {
-        username: '={{$credentials.keyId}}',
-        password: '={{$credentials.keySecret}}',
-      },
-    },
-  };
-
   // Test the credentials by making a simple API call
+  // Note: Authentication is handled manually in sinchBuildConversationsHttp.ts
+  // to avoid the "Allowed HTTP Request Domains" field
   test: ICredentialTestRequest = {
     request: {
       baseURL: '={{$credentials.region ? `https://${$credentials.region}.conversation.api.sinch.com` : "https://us.conversation.api.sinch.com"}}',
       url: '/v1/projects/={{$credentials.projectId}}/apps/={{$credentials.appId}}',
       method: 'GET',
+      auth: {
+        username: '={{$credentials.keyId}}',
+        password: '={{$credentials.keySecret}}',
+      },
     },
   };
 }
