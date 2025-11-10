@@ -43,9 +43,10 @@
     "copy:icons": "mkdir -p dist/nodes/SinchBuildConversations && cp -f src/nodes/SinchBuildConversations/*.png src/nodes/SinchBuildConversations/*.svg dist/nodes/SinchBuildConversations/ 2>/dev/null || true",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0 --fix",
-    "test": "vitest run",
+    "test": "vitest run --coverage",
     "test:coverage": "vitest run --coverage",
-    "dev:test": "vitest",
+    "test:watch": "vitest",
+    "test:no-coverage": "vitest run",
     "prepare": "npm run build"
   },
   "dependencies": {

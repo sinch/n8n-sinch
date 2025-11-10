@@ -164,7 +164,7 @@ case "${STEP}" in
         fi
         timeout 600 npm ci --no-audit --no-fund --prefer-offline
       fi
-      echo '[test] Running test suite...'
+      echo '[test] Running test suite with coverage...'
       npm test
       echo '[test] Tests completed successfully'
     "
