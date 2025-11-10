@@ -8,13 +8,13 @@
 │                                                                  │
 │  ┌────────────────────────────────────────────────────────┐   │
 │  │         Sinch Build Conversations Node                       │   │
-│  │  (n8n-nodes-sinch-conversations)                       │   │
+│  │  (n8n-nodes-sinch-build-conversations)                       │   │
 │  └────────────────┬───────────────────────────────────────┘   │
 └───────────────────┼──────────────────────────────────────────┘
                     │
                     ▼
     ┌───────────────────────────────────┐
-    │  SinchConversations.node.ts       │
+    │  SinchBuildConversations.node.ts       │
     │  - Resource: message              │
     │  - Operations: send, list         │
     └───────────┬───────────────────────┘
@@ -22,14 +22,14 @@
                 ▼
     ┌───────────────────────────────────┐
     │  Credentials Manager              │
-    │  (SinchConversationsApi)          │
+    │  (SinchBuildConversationsApi)          │
     │  - keyId, keySecret               │
     │  - region, projectId, appId       │
     └───────────┬───────────────────────┘
                 │
                 ▼
     ┌───────────────────────────────────┐
-    │  sinchConversationsHttp.ts        │
+    │  SinchBuildConversationsHttp.ts        │
     │  - OAuth2.0 Token Management      │
     │  - Token Caching (55min)          │
     │  - Regional Endpoint Selection    │
@@ -37,7 +37,7 @@
                 │
                 ▼
     ┌───────────────────────────────────┐
-    │  SinchConversationsProvider.ts    │
+    │  SinchBuildConversationsProvider.ts    │
     │  - Build Send Request             │
     │  - Parse Response                 │
     └───────────┬───────────────────────┘
@@ -69,7 +69,7 @@
        │    - App ID
        ▼
 ┌──────────────────────────────────┐
-│  SinchConversationsApi.credentials│
+│  SinchBuildConversationsApi.credentials│
 └──────┬───────────────────────────┘
        │ 2. Store encrypted credentials
        ▼
@@ -128,7 +128,7 @@
        │
        ▼
 ┌──────────────────────────────────┐
-│  SinchConversations.node.ts      │
+│  SinchBuildConversations.node.ts      │
 │  operation: "send"               │
 └──────┬───────────────────────────┘
        │ 1. Normalize phone number
@@ -140,7 +140,7 @@
        │ 2. Validate
        ▼
 ┌──────────────────────────────────┐
-│  SinchConversationsProvider      │
+│  SinchBuildConversationsProvider      │
 │  .send()                         │
 └──────┬───────────────────────────┘
        │ 3. Build request body:
@@ -160,7 +160,7 @@
        │    }
        ▼
 ┌──────────────────────────────────┐
-│  makeSinchConversationsRequest() │
+│  makeSinchBuildConversationsRequest() │
 └──────┬───────────────────────────┘
        │ 4. Get OAuth2.0 token (cached)
        │ 5. Select regional endpoint
@@ -208,7 +208,7 @@
        │
        ▼
 ┌──────────────────────────────────┐
-│  SinchConversations.node.ts      │
+│  SinchBuildConversations.node.ts      │
 │  operation: "list"               │
 └──────┬───────────────────────────┘
        │ 1. Build query params:
@@ -222,7 +222,7 @@
        │    }
        ▼
 ┌──────────────────────────────────┐
-│  makeSinchConversationsRequest() │
+│  makeSinchBuildConversationsRequest() │
 └──────┬───────────────────────────┘
        │ 2. Get OAuth2.0 token (cached)
        │ 3. Select regional endpoint
@@ -292,7 +292,7 @@
        │
        ▼
 ┌─────────────────────────────────┐
-│  makeSinchConversationsRequest()│
+│  makeSinchBuildConversationsRequest()│
 └──────┬──────────────────────────┘
        │
        ▼
@@ -447,20 +447,20 @@ Time: 01:00 → Fifth Request
 ## File Structure & Dependencies
 
 ```
-n8n-nodes-sinch-conversations/
+n8n-nodes-sinch-build-conversations/
 │
 ├── src/
 │   ├── index.ts ─────────────────────┐
 │   │                                  │ Exports nodes & credentials
 │   ├── credentials/                   │
-│   │   └── SinchConversationsApi.credentials.ts
+│   │   └── SinchBuildConversationsApi.credentials.ts
 │   │       ├─ Credential definition   │
 │   │       ├─ Field validation        │
 │   │       └─ Test endpoint           │
 │   │                                  │
 │   ├── nodes/                         │
-│   │   └── SinchConversations/        │
-│   │       ├── SinchConversations.node.ts
+│   │   └── SinchBuildConversations/        │
+│   │       ├── SinchBuildConversations.node.ts
 │   │       │   ├─ Resource selection  │
 │   │       │   ├─ Operation selection │
 │   │       │   ├─ Field definitions   │
@@ -475,7 +475,7 @@ n8n-nodes-sinch-conversations/
 │   │           ├── ProviderStrategy.ts
 │   │           │   └─ Interface       │
 │   │           │                      │
-│   │           └── SinchConversationsProvider.ts
+│   │           └── SinchBuildConversationsProvider.ts
 │   │               ├─ send()          │
 │   │               └─ list() (future) │
 │   │                                  │
@@ -488,12 +488,12 @@ n8n-nodes-sinch-conversations/
 │       │   ├─ normalizePhoneNumberToE164()
 │       │   └─ detectEncoding()        │
 │       │                              │
-│       └── sinchConversationsHttp.ts  │
+│       └── SinchBuildConversationsHttp.ts  │
 │           ├─ getAccessToken()        │
 │           │   └─ Token caching       │
 │           ├─ getBaseUrl()            │
 │           │   └─ Regional selection  │
-│           └─ makeSinchConversationsRequest()
+│           └─ makeSinchBuildConversationsRequest()
 │               ├─ Auth handling       │
 │               ├─ Error parsing       │
 │               └─ Request execution   │
@@ -502,7 +502,7 @@ n8n-nodes-sinch-conversations/
 │   ├── __mocks__/                     │
 │   │   └── n8n-workflow.ts            │
 │   │                                  │
-│   └── SinchConversations.node.test.ts
+│   └── SinchBuildConversations.node.test.ts
 │       ├─ Send message tests          │
 │       ├─ List messages tests         │
 │       ├─ Auth tests                  │
@@ -570,7 +570,7 @@ n8n-nodes-sinch-conversations/
    ▼
 6. HTTP REQUEST HELPER
    │
-   │ makeSinchConversationsRequest({
+   │ makeSinchBuildConversationsRequest({
    │   method: "POST",
    │   endpoint: "/v1/projects/{id}/messages:send",
    │   body: {...}

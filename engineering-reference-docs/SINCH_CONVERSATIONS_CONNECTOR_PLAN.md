@@ -44,7 +44,7 @@ We're following the architecture established in `/n8n/n8n-engage`:
 
 ```
 n8n/n8n-build/
-└── n8n-nodes-sinch-conversations/
+└── n8n-nodes-sinch-build-conversations/
     ├── package.json
     ├── tsconfig.json
     ├── README.md
@@ -59,23 +59,23 @@ n8n/n8n-build/
     ├── src/
     │   ├── index.ts
     │   ├── credentials/
-    │   │   └── SinchConversationsApi.credentials.ts
+    │   │   └── SinchBuildConversationsApi.credentials.ts
     │   ├── nodes/
-    │   │   └── SinchConversations/
-    │   │       ├── SinchConversations.node.ts
+    │   │   └── SinchBuildConversations/
+    │   │       ├── SinchBuildConversations.node.ts
     │   │       ├── types.ts
     │   │       ├── sinch-logo.png
     │   │       └── providers/
     │   │           ├── ProviderStrategy.ts
-    │   │           └── SinchConversationsProvider.ts
+    │   │           └── SinchBuildConversationsProvider.ts
     │   └── utils/
     │       ├── errors.ts
     │       ├── phone.ts
-    │       └── sinchConversationsHttp.ts
+    │       └── SinchBuildConversationsHttp.ts
     ├── tests/
     │   ├── __mocks__/
     │   │   └── n8n-workflow.ts
-    │   └── SinchConversations.node.test.ts
+    │   └── SinchBuildConversations.node.test.ts
     └── examples/
         └── basic-sms-workflow.json
 ```
@@ -84,7 +84,7 @@ n8n/n8n-build/
 
 ```json
 {
-  "name": "@sinch-engage/n8n-nodes-sinch-conversations",
+  "name": "@sinch-engage/n8n-nodes-sinch-build-conversations",
   "version": "1.0.0-alpha-0",
   "description": "n8n community node for Sinch Build Conversations API - send and manage omnichannel messages",
   "keywords": [
@@ -104,10 +104,10 @@ n8n/n8n-build/
   "types": "dist/index.d.ts",
   "n8n": {
     "nodes": [
-      "dist/nodes/SinchConversations/SinchConversations.node.js"
+      "dist/nodes/SinchBuildConversations/SinchBuildConversations.node.js"
     ],
     "credentials": [
-      "dist/credentials/SinchConversationsApi.credentials.js"
+      "dist/credentials/SinchBuildConversationsApi.credentials.js"
     ]
   },
   "directories": {
@@ -125,7 +125,7 @@ n8n/n8n-build/
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && npm run copy:icons",
-    "copy:icons": "mkdir -p dist/nodes/SinchConversations && cp -f src/nodes/SinchConversations/*.png src/nodes/SinchConversations/*.svg dist/nodes/SinchConversations/ 2>/dev/null || true",
+    "copy:icons": "mkdir -p dist/nodes/SinchBuildConversations && cp -f src/nodes/SinchBuildConversations/*.png src/nodes/SinchBuildConversations/*.svg dist/nodes/SinchBuildConversations/ 2>/dev/null || true",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0 --fix",
     "test": "vitest run",
@@ -163,7 +163,7 @@ n8n/n8n-build/
 
 ## Phase 2: Credentials Implementation
 
-### File: `src/credentials/SinchConversationsApi.credentials.ts`
+### File: `src/credentials/SinchBuildConversationsApi.credentials.ts`
 
 **Key Features:**
 - OAuth2.0 authentication (preferred)
@@ -181,8 +181,8 @@ import type {
   ICredentialDataDecryptedObject,
 } from 'n8n-workflow';
 
-export class SinchConversationsApi implements ICredentialType {
-  name = 'sinchConversationsApi';
+export class SinchBuildConversationsApi implements ICredentialType {
+  name = 'SinchBuildConversationsApi';
   displayName = 'Sinch Build Conversations API';
   documentationUrl = 'https://developers.sinch.com/docs/conversation/';
   
@@ -283,7 +283,7 @@ export class SinchConversationsApi implements ICredentialType {
 
 ## Phase 3: Core Types & Utilities
 
-### File: `src/nodes/SinchConversations/types.ts`
+### File: `src/nodes/SinchBuildConversations/types.ts`
 
 ```typescript
 import type { IExecuteFunctions } from 'n8n-workflow';
@@ -293,7 +293,7 @@ export type SinchChannel = 'SMS' | 'WHATSAPP' | 'RCS' | 'MESSENGER' | 'VIBERBM';
 export type MessageStatus = 'queued' | 'sent' | 'failed';
 
 // Credentials structure
-export interface SinchConversationsCredentials {
+export interface SinchBuildConversationsCredentials {
   authMethod: 'oauth2' | 'basic';
   keyId: string;
   keySecret: string;
@@ -382,7 +382,7 @@ export interface ProviderSendParams {
   callbackUrl?: string;
   metadata?: string;
   helpers: IExecuteFunctions['helpers'];
-  credentials: SinchConversationsCredentials;
+  credentials: SinchBuildConversationsCredentials;
 }
 
 // Provider send result
@@ -446,7 +446,7 @@ export class SinchApiError extends Error {
 
 ## Phase 4: HTTP Request Helper
 
-### File: `src/utils/sinchConversationsHttp.ts`
+### File: `src/utils/SinchBuildConversationsHttp.ts`
 
 **Key Features:**
 - OAuth2.0 token management with caching
@@ -456,7 +456,7 @@ export class SinchApiError extends Error {
 
 ```typescript
 import type { IExecuteFunctions, IHookFunctions, ILoadOptionsFunctions } from 'n8n-workflow';
-import type { SinchConversationsCredentials, OAuth2TokenResponse, SinchRegion } from '../nodes/SinchConversations/types';
+import type { SinchBuildConversationsCredentials, OAuth2TokenResponse, SinchRegion } from '../nodes/SinchBuildConversations/types';
 import { SinchApiError } from './errors';
 
 // Token cache (in-memory, keyed by credentials)
@@ -468,7 +468,7 @@ const tokenCache = new Map<string, { token: string; expiresAt: number }>();
  */
 async function getAccessToken(
   context: IHookFunctions | IExecuteFunctions | ILoadOptionsFunctions,
-  credentials: SinchConversationsCredentials,
+  credentials: SinchBuildConversationsCredentials,
 ): Promise<string> {
   // Check if using basic auth (return empty, will use basic auth header instead)
   if (credentials.authMethod === 'basic') {
@@ -538,7 +538,7 @@ function getBaseUrl(region: SinchRegion): string {
  * Make an authenticated request to the Sinch Build Conversations API.
  * Handles OAuth2.0 token management and regional endpoints.
  */
-export async function makeSinchConversationsRequest<T = any>(
+export async function makeSinchBuildConversationsRequest<T = any>(
   context: IHookFunctions | IExecuteFunctions | ILoadOptionsFunctions,
   options: {
     method: 'GET' | 'POST' | 'DELETE' | 'PUT' | 'PATCH';
@@ -548,7 +548,7 @@ export async function makeSinchConversationsRequest<T = any>(
   },
 ): Promise<T> {
   // Get credentials
-  const credentials = (await context.getCredentials('sinchConversationsApi')) as SinchConversationsCredentials;
+  const credentials = (await context.getCredentials('SinchBuildConversationsApi')) as SinchBuildConversationsCredentials;
 
   // Get access token (empty for basic auth)
   const accessToken = await getAccessToken(context, credentials);
@@ -609,7 +609,7 @@ export async function makeSinchConversationsRequest<T = any>(
 
 ## Phase 5: Provider Implementation
 
-### File: `src/nodes/SinchConversations/providers/ProviderStrategy.ts`
+### File: `src/nodes/SinchBuildConversations/providers/ProviderStrategy.ts`
 
 ```typescript
 import type { ProviderSendParams, ProviderSendResult } from '../types';
@@ -619,22 +619,22 @@ export interface ProviderStrategy {
 }
 ```
 
-### File: `src/nodes/SinchConversations/providers/SinchConversationsProvider.ts`
+### File: `src/nodes/SinchBuildConversations/providers/SinchBuildConversationsProvider.ts`
 
 ```typescript
 import type { IExecuteFunctions } from 'n8n-workflow';
 import { ProviderStrategy } from './ProviderStrategy';
 import { ProviderHttpError } from '../../../utils/errors';
-import { makeSinchConversationsRequest } from '../../../utils/sinchConversationsHttp';
+import { makeSinchBuildConversationsRequest } from '../../../utils/SinchBuildConversationsHttp';
 import type {
-  SinchConversationsCredentials,
+  SinchBuildConversationsCredentials,
   SendMessageRequest,
   SendMessageResponse,
   ProviderSendParams,
   ProviderSendResult,
 } from '../types';
 
-export class SinchConversationsProvider implements ProviderStrategy {
+export class SinchBuildConversationsProvider implements ProviderStrategy {
   async send(params: ProviderSendParams): Promise<ProviderSendResult> {
     const { to, message, callbackUrl, metadata, helpers, credentials } = params;
 
@@ -674,7 +674,7 @@ export class SinchConversationsProvider implements ProviderStrategy {
       // Cast helpers to provide context for shared utility
       const context = { helpers, getCredentials: async () => credentials } as any;
 
-      const response = await makeSinchConversationsRequest<SendMessageResponse>(context, {
+      const response = await makeSinchBuildConversationsRequest<SendMessageResponse>(context, {
         method: 'POST',
         endpoint,
         body: requestBody,
@@ -702,7 +702,7 @@ export class SinchConversationsProvider implements ProviderStrategy {
 
 ## Phase 6: Main Node Implementation
 
-### File: `src/nodes/SinchConversations/SinchConversations.node.ts`
+### File: `src/nodes/SinchBuildConversations/SinchBuildConversations.node.ts`
 
 **Key Features:**
 - Resource-based structure (SMS, potentially others)
@@ -722,9 +722,9 @@ import type {
 } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';
 import { normalizePhoneNumberToE164 } from '../../utils/phone';
-import { SinchConversationsProvider } from './providers/SinchConversationsProvider';
-import { makeSinchConversationsRequest } from '../../utils/sinchConversationsHttp';
-import type { SinchConversationsCredentials, ListMessagesResponse, ListMessagesParams } from './types';
+import { SinchBuildConversationsProvider } from './providers/SinchBuildConversationsProvider';
+import { makeSinchBuildConversationsRequest } from '../../utils/SinchBuildConversationsHttp';
+import type { SinchBuildConversationsCredentials, ListMessagesResponse, ListMessagesParams } from './types';
 import * as countries from 'i18n-iso-countries';
 import enLocale = require('i18n-iso-countries/langs/en.json');
 
@@ -742,10 +742,10 @@ function getCountryOptions() {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export class SinchConversations implements INodeType {
+export class SinchBuildConversations implements INodeType {
   description: INodeTypeDescription = {
     displayName: 'Sinch Build Conversations',
-    name: 'sinchConversations',
+    name: 'SinchBuildConversations',
     icon: 'file:sinch-logo.png',
     group: ['transform'],
     version: 1,
@@ -757,7 +757,7 @@ export class SinchConversations implements INodeType {
     inputs: ['main' as NodeConnectionType],
     outputs: ['main' as NodeConnectionType],
     credentials: [
-      { name: 'sinchConversationsApi', required: true },
+      { name: 'SinchBuildConversationsApi', required: true },
     ],
     properties: [
       // RESOURCE SELECTION
@@ -955,7 +955,7 @@ export class SinchConversations implements INodeType {
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
-    const credentials = (await this.getCredentials('sinchConversationsApi')) as SinchConversationsCredentials;
+    const credentials = (await this.getCredentials('SinchBuildConversationsApi')) as SinchBuildConversationsCredentials;
 
     for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
       const resource = this.getNodeParameter('resource', itemIndex) as string;
@@ -988,7 +988,7 @@ export class SinchConversations implements INodeType {
             });
           }
 
-          const provider = new SinchConversationsProvider();
+          const provider = new SinchBuildConversationsProvider();
 
           try {
             const providerResult = await provider.send({
@@ -1042,7 +1042,7 @@ export class SinchConversations implements INodeType {
           const endpoint = `/v1/projects/${credentials.projectId}/messages`;
 
           try {
-            const response = await makeSinchConversationsRequest<ListMessagesResponse>(this, {
+            const response = await makeSinchBuildConversationsRequest<ListMessagesResponse>(this, {
               method: 'GET',
               endpoint,
               qs: queryParams,
@@ -1081,7 +1081,7 @@ export class SinchConversations implements INodeType {
 
 ## Phase 7: Testing Strategy
 
-### File: `tests/SinchConversations.node.test.ts`
+### File: `tests/SinchBuildConversations.node.test.ts`
 
 **Test Coverage:**
 1. **Send Message Tests**
@@ -1111,7 +1111,7 @@ export class SinchConversations implements INodeType {
 
 ```typescript
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { SinchConversations } from '../src/nodes/SinchConversations/SinchConversations.node';
+import { SinchBuildConversations } from '../src/nodes/SinchBuildConversations/SinchBuildConversations.node';
 import type { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 
 // Mock implementation here
@@ -1170,7 +1170,7 @@ import type { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 
 **Copy from n8n-engage and adapt:**
 - Update package name references
-- Update scope to `@sinch-engage/n8n-nodes-sinch-conversations`
+- Update scope to `@sinch-engage/n8n-nodes-sinch-build-conversations`
 - Keep alpha versioning strategy
 - Update testing instructions for Conversations API
 
@@ -1229,7 +1229,7 @@ npm-debug.log*
 ## Phase 10: Implementation Checklist
 
 ### Week 1: Foundation
-- [ ] Create project structure in `n8n/n8n-build/n8n-nodes-sinch-conversations/`
+- [ ] Create project structure in `n8n/n8n-build/n8n-nodes-sinch-build-conversations/`
 - [ ] Set up `package.json` with dependencies
 - [ ] Configure TypeScript (`tsconfig.json`)
 - [ ] Set up testing framework (vitest)
@@ -1238,7 +1238,7 @@ npm-debug.log*
 
 ### Week 2: Core Implementation
 - [ ] Implement OAuth2.0 token management with caching
-- [ ] Build `SinchConversationsProvider` for Send Message
+- [ ] Build `SinchBuildConversationsProvider` for Send Message
 - [ ] Implement main node with Send Message operation
 - [ ] Add phone number normalization integration
 - [ ] Test Send Message with sandbox/test numbers
@@ -1506,9 +1506,9 @@ npm-debug.log*
 - Support: https://www.sinch.com/support/
 
 **NPM Package:**
-- Alpha: `@sinch-engage/n8n-nodes-sinch-conversations@alpha`
-- Beta: `@sinch-engage/n8n-nodes-sinch-conversations@beta`
-- GA: `@sinch-engage/n8n-nodes-sinch-conversations`
+- Alpha: `@sinch-engage/n8n-nodes-sinch-build-conversations@alpha`
+- Beta: `@sinch-engage/n8n-nodes-sinch-build-conversations@beta`
+- GA: `@sinch-engage/n8n-nodes-sinch-build-conversations`
 
 ---
 
@@ -1530,13 +1530,13 @@ npm-debug.log*
           "callbackUrl": "https://webhook.site/unique-id"
         }
       },
-      "type": "@sinch-engage/n8n-nodes-sinch-conversations.sinchConversations",
+      "type": "@sinch-engage/n8n-nodes-sinch-build-conversations.SinchBuildConversations",
       "typeVersion": 1,
       "position": [250, 300],
       "id": "abc123",
       "name": "Sinch Build Conversations",
       "credentials": {
-        "sinchConversationsApi": {
+        "SinchBuildConversationsApi": {
           "id": "1",
           "name": "Sinch Build Conversations API"
         }

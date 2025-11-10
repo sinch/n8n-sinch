@@ -23,8 +23,8 @@ This is your quick reference for building the Sinch Build Conversations API conn
 ### 1️⃣ **Day 1-3: Setup**
 ```bash
 cd /Users/liaher/Developer/connectors/n8n/n8n-build
-mkdir -p n8n-nodes-sinch-conversations
-cd n8n-nodes-sinch-conversations
+mkdir -p n8n-nodes-sinch-build-conversations
+cd n8n-nodes-sinch-build-conversations
 
 # Copy package.json template from plan
 # Copy tsconfig.json from n8n-engage
@@ -41,19 +41,19 @@ npm install
 ### 2️⃣ **Day 4-5: Credentials & Auth**
 **Priority:** OAuth2.0 token management!
 
-**File:** `src/credentials/SinchConversationsApi.credentials.ts`
+**File:** `src/credentials/SinchBuildConversationsApi.credentials.ts`
 - Add 5 credential fields: keyId, keySecret, region, projectId, appId
 - Add authMethod selection (oauth2 vs basic)
 - Implement credential test
 
-**File:** `src/utils/sinchConversationsHttp.ts`
+**File:** `src/utils/SinchBuildConversationsHttp.ts`
 - Implement `getAccessToken()` with caching
 - Cache tokens for 55 minutes (5min buffer before expiry)
 - POST to `https://auth.sinch.com/oauth2/token`
-- Implement `makeSinchConversationsRequest()` helper
+- Implement `makeSinchBuildConversationsRequest()` helper
 
 ### 3️⃣ **Day 6-8: Send Message**
-**File:** `src/nodes/SinchConversations/providers/SinchConversationsProvider.ts`
+**File:** `src/nodes/SinchBuildConversations/providers/SinchBuildConversationsProvider.ts`
 
 **Request format:**
 ```typescript
@@ -183,16 +183,16 @@ function getBaseUrl(region: 'us' | 'eu' | 'br'): string {
 ### From n8n-engage (Reuse These!)
 1. ✅ `src/utils/phone.ts` - Phone normalization
 2. ✅ `src/utils/errors.ts` - Error classes
-3. ✅ `src/nodes/SinchConversations/types.ts` - Basic type structure (adapt)
+3. ✅ `src/nodes/SinchBuildConversations/types.ts` - Basic type structure (adapt)
 4. ✅ `tests/__mocks__/n8n-workflow.ts` - Test mocks
 5. ✅ `deploy/deploy-to-npm.sh` - Deployment script
 6. ✅ `.gitignore`, `vitest.config.ts`, `tsconfig.json`
 
 ### New Files (Write from Scratch)
-1. ❌ `src/utils/sinchConversationsHttp.ts` - OAuth2.0 + regional endpoints
-2. ❌ `src/credentials/SinchConversationsApi.credentials.ts` - Multi-field credentials
-3. ❌ `src/nodes/SinchConversations/providers/SinchConversationsProvider.ts` - Nested request format
-4. ❌ `src/nodes/SinchConversations/SinchConversations.node.ts` - Node with List operation
+1. ❌ `src/utils/SinchBuildConversationsHttp.ts` - OAuth2.0 + regional endpoints
+2. ❌ `src/credentials/SinchBuildConversationsApi.credentials.ts` - Multi-field credentials
+3. ❌ `src/nodes/SinchBuildConversations/providers/SinchBuildConversationsProvider.ts` - Nested request format
+4. ❌ `src/nodes/SinchBuildConversations/SinchBuildConversations.node.ts` - Node with List operation
 
 ---
 
@@ -275,7 +275,7 @@ recipient: {
 ## File Structure Checklist
 
 ```
-n8n-nodes-sinch-conversations/
+n8n-nodes-sinch-build-conversations/
 ├── ✅ package.json (from plan)
 ├── ✅ tsconfig.json (copy from n8n-engage)
 ├── ✅ README.md
@@ -290,22 +290,22 @@ n8n-nodes-sinch-conversations/
 ├── src/
 │   ├── ✅ index.ts (simple exports)
 │   ├── credentials/
-│   │   └── ❌ SinchConversationsApi.credentials.ts (NEW)
+│   │   └── ❌ SinchBuildConversationsApi.credentials.ts (NEW)
 │   ├── nodes/
-│   │   └── SinchConversations/
-│   │       ├── ❌ SinchConversations.node.ts (NEW)
+│   │   └── SinchBuildConversations/
+│   │       ├── ❌ SinchBuildConversations.node.ts (NEW)
 │   │       ├── ❌ types.ts (NEW, adapted)
 │   │       ├── ✅ sinch-logo.png (use Sinch logo)
 │   │       └── providers/
 │   │           ├── ✅ ProviderStrategy.ts (copy from n8n-engage)
-│   │           └── ❌ SinchConversationsProvider.ts (NEW)
+│   │           └── ❌ SinchBuildConversationsProvider.ts (NEW)
 │   └── utils/
 │       ├── ✅ errors.ts (copy from n8n-engage)
 │       ├── ✅ phone.ts (copy from n8n-engage)
-│       └── ❌ sinchConversationsHttp.ts (NEW)
+│       └── ❌ SinchBuildConversationsHttp.ts (NEW)
 ├── tests/
 │   ├── ✅ __mocks__/n8n-workflow.ts (copy from n8n-engage)
-│   └── ❌ SinchConversations.node.test.ts (NEW)
+│   └── ❌ SinchBuildConversations.node.test.ts (NEW)
 └── examples/
     └── ✅ basic-sms-workflow.json (NEW)
 ```
@@ -346,7 +346,7 @@ npm run test
 ./deploy/deploy-to-npm.sh
 
 # Check deployment
-npm view @sinch-engage/n8n-nodes-sinch-conversations versions
+npm view @sinch-engage/n8n-nodes-sinch-build-conversations versions
 ```
 
 ---

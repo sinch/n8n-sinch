@@ -1,4 +1,4 @@
-# n8n-nodes-sinch-conversations
+# n8n-nodes-sinch-build-conversations
 
 Community node for n8n to send and manage omnichannel messages via Sinch Build Conversations API.
 
@@ -17,7 +17,7 @@ Community node for n8n to send and manage omnichannel messages via Sinch Build C
 ### Basic Information
 
 - **Display Name**: Sinch Build
-- **Name**: `sinchConversations`
+- **Name**: `SinchBuildConversations`
 - **Group**: `transform`
 - **Inputs**: `main`
 - **Outputs**: `main`
@@ -173,13 +173,13 @@ Phone numbers must be in E.164 format:
           "callbackUrl": "https://webhook.site/unique-id"
         }
       },
-      "type": "@sinch-engage/n8n-nodes-sinch-conversations.sinchConversations",
+      "type": "@sinch-engage/n8n-nodes-sinch-build-conversations.SinchBuildConversations",
       "typeVersion": 1,
       "position": [250, 300],
       "id": "abc123",
       "name": "Sinch Build Conversations",
       "credentials": {
-        "sinchConversationsApi": {
+        "SinchBuildConversationsApi": {
           "id": "1",
           "name": "Sinch Build Conversations API"
         }

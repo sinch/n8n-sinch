@@ -142,8 +142,8 @@ This connector follows the proven architecture from our existing `n8n-engage` co
 4. **Begin implementation:**
    ```bash
    # Create project directory
-   mkdir n8n-nodes-sinch-conversations
-   cd n8n-nodes-sinch-conversations
+   mkdir n8n-nodes-sinch-build-conversations
+   cd n8n-nodes-sinch-build-conversations
    
    # Start with Day 1-3 setup from Quick Start Guide
    ```
@@ -273,7 +273,7 @@ n8n-build/
 ├── QUICK_START_GUIDE.md                   ← Daily reference
 ├── ARCHITECTURE_DIAGRAM.md                 ← Visual docs
 ├── README.md                              ← This file
-└── n8n-nodes-sinch-conversations/         ← Future: Implementation
+└── n8n-nodes-sinch-build-conversations/         ← Future: Implementation
     └── (to be created)
 ```
 
@@ -373,7 +373,7 @@ cat QUICK_START_GUIDE.md
 cat ARCHITECTURE_DIAGRAM.md
 
 # Start implementation
-cd n8n-nodes-sinch-conversations  # (after creating)
+cd n8n-nodes-sinch-build-conversations  # (after creating)
 npm install
 npm run build
 npm run test

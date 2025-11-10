@@ -1,4 +1,4 @@
-# Deployment Guide: n8n-nodes-sinch-conversations
+# Deployment Guide: n8n-nodes-sinch-build-conversations
 
 This guide explains how to deploy the n8n Sinch Build Conversations connector using a two-phase approach:
 1. **Development Phase**: Deploy to personal account with unique name for testing
@@ -47,14 +47,14 @@ You need an NPM account with publish permissions:
 
 ```bash
 # Navigate to project root
-cd /path/to/connectors/n8n/n8n-build/n8n-nodes-sinch-conversations
+cd /path/to/connectors/n8n/n8n-build/n8n-nodes-sinch-build-conversations
 
 # Deploy to personal account for testing
 ./deploy/deploy-to-npm.sh
 ```
 
 **Current Package Configuration:**
-- Name: `@sinch-engage/n8n-nodes-sinch-conversations`
+- Name: `@sinch-engage/n8n-nodes-sinch-build-conversations`
 - Version: `1.0.0-alpha-0`
 - Scope: Sinch Engage organization
 
@@ -62,7 +62,7 @@ cd /path/to/connectors/n8n/n8n-build/n8n-nodes-sinch-conversations
 1. 🔍 Verifies package name and version
 2. 🔨 Builds the package if needed
 3. 🔑 Prompts for NPM access token
-4. 📤 Publishes to `@sinch-engage/n8n-nodes-sinch-conversations@alpha`
+4. 📤 Publishes to `@sinch-engage/n8n-nodes-sinch-build-conversations@alpha`
 5. ✅ Provides testing instructions
 
 ### Phase 2: Production Deployment
@@ -77,7 +77,7 @@ cd /path/to/connectors/n8n/n8n-build/n8n-nodes-sinch-conversations
 ```
 
 **Production Package Configuration:**
-- Name: `@sinch-engage/n8n-nodes-sinch-conversations` (organization scope)
+- Name: `@sinch-engage/n8n-nodes-sinch-build-conversations` (organization scope)
 - Version: `1.0.0` (stable release)
 - Scope: Sinch Engage organization
 
@@ -132,21 +132,21 @@ The `deploy/deploy-to-npm.sh` script provides:
 
 ```bash
 # Check if package is published
-npm view @sinch-engage/n8n-nodes-sinch-conversations versions --json
+npm view @sinch-engage/n8n-nodes-sinch-build-conversations versions --json
 
 # View package info
-npm view @sinch-engage/n8n-nodes-sinch-conversations
+npm view @sinch-engage/n8n-nodes-sinch-build-conversations
 ```
 
 ### 2. Test Installation
 
 ```bash
 # Install the alpha version for testing
-npm install @sinch-engage/n8n-nodes-sinch-conversations@alpha
+npm install @sinch-engage/n8n-nodes-sinch-build-conversations@alpha
 
 # Or install in n8n for testing
 # In n8n: Settings → Community Nodes → Install
-# Enter: @sinch-engage/n8n-nodes-sinch-conversations
+# Enter: @sinch-engage/n8n-nodes-sinch-build-conversations
 ```
 
 ### 3. Test in n8n
@@ -172,12 +172,12 @@ npm install @sinch-engage/n8n-nodes-sinch-conversations@alpha
 **❌ "Package not found after publishing"**
 - Wait a few minutes for NPM propagation
 - Check correct package name spelling
-- Verify alpha tag: `npm view @sinch-engage/n8n-nodes-sinch-conversations dist-tags`
+- Verify alpha tag: `npm view @sinch-engage/n8n-nodes-sinch-build-conversations dist-tags`
 
 ### Getting Help
 - Check NPM status: https://status.npmjs.org/
 - NPM support: https://www.npmjs.com/support
-- Package: https://www.npmjs.com/package/@sinch-engage/n8n-nodes-sinch-conversations
+- Package: https://www.npmjs.com/package/@sinch-engage/n8n-nodes-sinch-build-conversations
 
 ## Version Management
 
@@ -206,10 +206,10 @@ npm version
 
 ```bash
 # Check if unpublishing is possible
-npm view @sinch-engage/n8n-nodes-sinch-conversations
+npm view @sinch-engage/n8n-nodes-sinch-build-conversations
 
 # Unpublish specific version (within 72 hours)
-npm unpublish @sinch-engage/n8n-nodes-sinch-conversations@1.0.0-alpha-0
+npm unpublish @sinch-engage/n8n-nodes-sinch-build-conversations@1.0.0-alpha-0
 ```
 
 ## Security Considerations
@@ -249,8 +249,8 @@ For issues or questions:
 
 ---
 
-**Current Status**: `@sinch-engage/n8n-nodes-sinch-conversations@1.0.0-alpha-0` - Ready for development testing
+**Current Status**: `@sinch-engage/n8n-nodes-sinch-build-conversations@1.0.0-alpha-0` - Ready for development testing
 
-**Next Phase**: Production deployment to `@sinch-engage/n8n-nodes-sinch-conversations@1.0.0`
+**Next Phase**: Production deployment to `@sinch-engage/n8n-nodes-sinch-build-conversations@1.0.0`
 
 

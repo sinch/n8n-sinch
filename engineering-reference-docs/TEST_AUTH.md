@@ -18,7 +18,7 @@ export SINCH_AUTH_METHOD="oauth2"  # or "basic" (optional, default: oauth2)
 2. Run the test script:
 
 ```bash
-cd /Users/liaher/Developer/connectors/n8n/n8n-build/n8n-nodes-sinch-conversations
+cd /Users/liaher/Developer/connectors/n8n/n8n-build/n8n-nodes-sinch-build-conversations
 node test-auth.js
 ```
 
