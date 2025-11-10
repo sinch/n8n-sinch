@@ -1,4 +1,3 @@
-import { ProviderStrategy } from './ProviderStrategy';
 import { ProviderHttpError } from '../../../utils/errors';
 import { makeSinchBuildConversationsRequest } from '../../../utils/sinchBuildConversationsHttp';
 import type {
@@ -8,7 +7,7 @@ import type {
   ProviderSendResult,
 } from '../types';
 
-export class SinchBuildConversationsProvider implements ProviderStrategy {
+export class SinchBuildConversationsProvider {
   async send(params: ProviderSendParams): Promise<ProviderSendResult> {
     const { to, message, smsSender, callbackUrl, metadata, helpers, credentials } = params;
 
