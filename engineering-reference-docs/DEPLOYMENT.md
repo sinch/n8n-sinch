@@ -1,6 +1,6 @@
 # Deployment Guide: n8n-nodes-sinch-conversations
 
-This guide explains how to deploy the n8n Sinch Conversations connector using a two-phase approach:
+This guide explains how to deploy the n8n Sinch Build Conversations connector using a two-phase approach:
 1. **Development Phase**: Deploy to personal account with unique name for testing
 2. **Production Phase**: Deploy to Sinch Engage organization with final name
 
@@ -152,7 +152,7 @@ npm install @sinch-engage/n8n-nodes-sinch-conversations@alpha
 ### 3. Test in n8n
 
 1. **Install in n8n**: Use the Community Nodes interface
-2. **Configure Credentials**: Add Sinch Conversations API credentials
+2. **Configure Credentials**: Add Sinch Build Conversations API credentials
 3. **Test Workflow**: Create a simple SMS workflow
 4. **Verify Functionality**: Test with real credentials
 

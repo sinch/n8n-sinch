@@ -1,8 +1,8 @@
-# Quick Start Guide: Sinch Conversations n8n Connector
+# Quick Start Guide: Sinch Build Conversations n8n Connector
 
 ## 🚀 Fast Track to Implementation
 
-This is your quick reference for building the Sinch Conversations API connector. See `SINCH_CONVERSATIONS_CONNECTOR_PLAN.md` for complete details.
+This is your quick reference for building the Sinch Build Conversations API connector. See `SINCH_CONVERSATIONS_CONNECTOR_PLAN.md` for complete details.
 
 ---
 
@@ -157,7 +157,7 @@ function getBaseUrl(region: 'us' | 'eu' | 'br'): string {
   }]
 }
 
-// ✅ CORRECT (Sinch Conversations format)
+// ✅ CORRECT (Sinch Build Conversations format)
 {
   app_id: "01ABC...",
   recipient: {

@@ -1,4 +1,4 @@
-# Architecture Diagram: Sinch Conversations n8n Connector
+# Architecture Diagram: Sinch Build Conversations n8n Connector
 
 ## High-Level Architecture
 
@@ -7,7 +7,7 @@
 │                         n8n Workflow                            │
 │                                                                  │
 │  ┌────────────────────────────────────────────────────────┐   │
-│  │         Sinch Conversations Node                       │   │
+│  │         Sinch Build Conversations Node                       │   │
 │  │  (n8n-nodes-sinch-conversations)                       │   │
 │  └────────────────┬───────────────────────────────────────┘   │
 └───────────────────┼──────────────────────────────────────────┘
@@ -44,7 +44,7 @@
                 │
                 ▼
 ┌───────────────────────────────────────────────┐
-│         Sinch Conversations API               │
+│         Sinch Build Conversations API               │
 │                                               │
 │  Auth: https://auth.sinch.com/oauth2/token   │
 │  US:   https://us.conversation.api.sinch.com │
@@ -635,7 +635,7 @@ n8n-nodes-sinch-conversations/
    │   acceptedTime: "2024-11-06T10:30:00Z",
    │   to: "+15551234567",
    │   message: "Hello!",
-   │   provider: "Sinch Conversations",
+   │   provider: "Sinch Build Conversations",
    │   channel: "SMS"
    │ }
    │
@@ -732,7 +732,7 @@ n8n-nodes-sinch-conversations/
 
 ┌───────────────────────────────────────────────────────────────┐
 │               n8n-conversations                               │
-│            (Sinch Conversations API)                          │
+│            (Sinch Build Conversations API)                          │
 └───────────────────────────────────────────────────────────────┘
         │
         │  Request Format:

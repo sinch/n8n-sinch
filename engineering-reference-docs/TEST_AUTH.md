@@ -1,6 +1,6 @@
 # Authentication Testing Guide
 
-This guide helps you test and debug Sinch Conversations API authentication using the CLI test script.
+This guide helps you test and debug Sinch Build Conversations API authentication using the CLI test script.
 
 ## Quick Start
 
@@ -37,7 +37,7 @@ The test script performs the following checks:
 
 ### Successful OAuth2.0 Test:
 ```
-🚀 Sinch Conversations API Authentication Test
+🚀 Sinch Build Conversations API Authentication Test
 ============================================================
 
 ✅ All required credentials provided

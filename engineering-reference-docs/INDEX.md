@@ -1,6 +1,6 @@
 # 📑 Documentation Index
 
-**Sinch Conversations API n8n Connector Planning**
+**Sinch Build Conversations API n8n Connector Planning**
 
 Last Updated: November 6, 2024
 

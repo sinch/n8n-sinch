@@ -1,8 +1,8 @@
-# Sinch Conversations API n8n Connector - Build Plan
+# Sinch Build Conversations API n8n Connector - Build Plan
 
 ## Executive Summary
 
-This document outlines a detailed plan to build an n8n community node for the **Sinch Conversations API**, based on the proven patterns and architecture from our `n8n-engage` connector. The initial version will support **Send Message** (SMS channel) and optionally **List Messages** actions.
+This document outlines a detailed plan to build an n8n community node for the **Sinch Build Conversations API**, based on the proven patterns and architecture from our `n8n-engage` connector. The initial version will support **Send Message** (SMS channel) and optionally **List Messages** actions.
 
 ## Reference Implementation
 
@@ -26,7 +26,7 @@ We're following the architecture established in `/n8n/n8n-engage`:
 
 ### Core Differences from MessageMedia API
 
-| Feature                 | Sinch Conversations                       | MessageMedia (n8n-engage)      |
+| Feature                 | Sinch Build Conversations                       | MessageMedia (n8n-engage)      |
 | ----------------------- | ----------------------------------------- | ------------------------------ |
 | **Authentication**      | OAuth2.0 (preferred) + Basic Auth         | Basic Auth only                |
 | **Regional Endpoints**  | Yes (US/EU/BR)                            | No                             |
@@ -86,7 +86,7 @@ n8n/n8n-build/
 {
   "name": "@sinch-engage/n8n-nodes-sinch-conversations",
   "version": "1.0.0-alpha-0",
-  "description": "n8n community node for Sinch Conversations API - send and manage omnichannel messages",
+  "description": "n8n community node for Sinch Build Conversations API - send and manage omnichannel messages",
   "keywords": [
     "n8n-community-node",
     "n8n-nodes",
@@ -183,7 +183,7 @@ import type {
 
 export class SinchConversationsApi implements ICredentialType {
   name = 'sinchConversationsApi';
-  displayName = 'Sinch Conversations API';
+  displayName = 'Sinch Build Conversations API';
   documentationUrl = 'https://developers.sinch.com/docs/conversation/';
   
   properties: INodeProperties[] = [
@@ -463,7 +463,7 @@ import { SinchApiError } from './errors';
 const tokenCache = new Map<string, { token: string; expiresAt: number }>();
 
 /**
- * Get OAuth2.0 access token for Sinch Conversations API.
+ * Get OAuth2.0 access token for Sinch Build Conversations API.
  * Caches tokens until they expire (typically 1 hour).
  */
 async function getAccessToken(
@@ -523,7 +523,7 @@ async function getAccessToken(
 }
 
 /**
- * Get the base URL for the Sinch Conversations API based on region.
+ * Get the base URL for the Sinch Build Conversations API based on region.
  */
 function getBaseUrl(region: SinchRegion): string {
   const baseUrls: Record<SinchRegion, string> = {
@@ -535,7 +535,7 @@ function getBaseUrl(region: SinchRegion): string {
 }
 
 /**
- * Make an authenticated request to the Sinch Conversations API.
+ * Make an authenticated request to the Sinch Build Conversations API.
  * Handles OAuth2.0 token management and regional endpoints.
  */
 export async function makeSinchConversationsRequest<T = any>(
@@ -596,7 +596,7 @@ export async function makeSinchConversationsRequest<T = any>(
     const errorStatus = errorResponse?.error?.status;
 
     throw new SinchApiError(
-      `Sinch Conversations API error: ${errorMessage}`,
+      `Sinch Build Conversations API error: ${errorMessage}`,
       errorCode,
       errorStatus,
       errorResponse,
@@ -689,7 +689,7 @@ export class SinchConversationsProvider implements ProviderStrategy {
     } catch (err) {
       const error = err as { statusCode?: number; message?: string; response?: unknown };
       throw new ProviderHttpError(
-        error.message || 'Sinch Conversations API request failed',
+        error.message || 'Sinch Build Conversations API request failed',
         error.statusCode,
         error.response,
       );
@@ -744,15 +744,15 @@ function getCountryOptions() {
 
 export class SinchConversations implements INodeType {
   description: INodeTypeDescription = {
-    displayName: 'Sinch Conversations',
+    displayName: 'Sinch Build Conversations',
     name: 'sinchConversations',
     icon: 'file:sinch-logo.png',
     group: ['transform'],
     version: 1,
     subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-    description: 'Send and manage omnichannel messages via Sinch Conversations API',
+    description: 'Send and manage omnichannel messages via Sinch Build Conversations API',
     defaults: {
-      name: 'Sinch Conversations',
+      name: 'Sinch Build Conversations',
     },
     inputs: ['main' as NodeConnectionType],
     outputs: ['main' as NodeConnectionType],
@@ -1007,7 +1007,7 @@ export class SinchConversations implements INodeType {
                 acceptedTime: providerResult.acceptedTime,
                 to: toResult.value,
                 message,
-                provider: 'Sinch Conversations',
+                provider: 'Sinch Build Conversations',
                 channel: 'SMS',
                 raw: providerResult.raw,
               } as unknown as IDataObject,
@@ -1184,7 +1184,7 @@ import type { IExecuteFunctions, INodeExecutionData } from 'n8n-workflow';
 ```bash
 #!/bin/bash
 # Deploy to NPM with safety checks
-# Adapted for Sinch Conversations connector
+# Adapted for Sinch Build Conversations connector
 ```
 
 ### File: `deploy/unpublish-dev-package.sh`
@@ -1248,7 +1248,7 @@ npm-debug.log*
 - [ ] Add filtering and pagination support
 - [ ] Write comprehensive unit tests
 - [ ] Create example workflows
-- [ ] Test with real Sinch Conversations API credentials
+- [ ] Test with real Sinch Build Conversations API credentials
 
 ### Week 4: Documentation & Deployment
 - [ ] Write README.md with setup guide
@@ -1518,7 +1518,7 @@ npm-debug.log*
 
 ```json
 {
-  "name": "Send SMS via Sinch Conversations",
+  "name": "Send SMS via Sinch Build Conversations",
   "nodes": [
     {
       "parameters": {
@@ -1534,11 +1534,11 @@ npm-debug.log*
       "typeVersion": 1,
       "position": [250, 300],
       "id": "abc123",
-      "name": "Sinch Conversations",
+      "name": "Sinch Build Conversations",
       "credentials": {
         "sinchConversationsApi": {
           "id": "1",
-          "name": "Sinch Conversations API"
+          "name": "Sinch Build Conversations API"
         }
       }
     }
@@ -1577,4 +1577,4 @@ npm-debug.log*
 
 **End of Plan Document**
 
-*This plan serves as the comprehensive blueprint for building the Sinch Conversations API n8n connector. Follow each phase sequentially, referring to the n8n-engage implementation for proven patterns.*
+*This plan serves as the comprehensive blueprint for building the Sinch Build Conversations API n8n connector. Follow each phase sequentially, referring to the n8n-engage implementation for proven patterns.*

@@ -1,6 +1,6 @@
-# n8n Sinch Conversations Connector - Planning Documents
+# n8n Sinch Build Conversations Connector - Planning Documents
 
-This directory contains comprehensive planning and design documentation for building the **Sinch Conversations API n8n community node**.
+This directory contains comprehensive planning and design documentation for building the **Sinch Build Conversations API n8n community node**.
 
 ## 📚 Documentation Overview
 
@@ -56,7 +56,7 @@ ASCII diagrams illustrating:
 ## 🎯 Project Goals
 
 Build an n8n community node that enables:
-1. **Send SMS messages** via Sinch Conversations API
+1. **Send SMS messages** via Sinch Build Conversations API
 2. **List messages** with filtering and pagination
 3. **OAuth2.0 authentication** with automatic token management
 4. **Multi-region support** (US, EU, BR)
@@ -71,9 +71,9 @@ This connector follows the proven architecture from our existing `n8n-engage` co
 
 ## 🏗️ Key Technical Differences
 
-### From MessageMedia (n8n-engage) to Sinch Conversations
+### From MessageMedia (n8n-engage) to Sinch Build Conversations
 
-| Feature              | MessageMedia        | Sinch Conversations                   |
+| Feature              | MessageMedia        | Sinch Build Conversations                   |
 | -------------------- | ------------------- | ------------------------------------- |
 | **Auth**             | Basic Auth only     | OAuth2.0 + Basic Auth                 |
 | **Endpoints**        | Single URL          | Regional (US/EU/BR)                   |
@@ -153,7 +153,7 @@ This connector follows the proven architecture from our existing `n8n-engage` co
 - **Timeline**: 20 working days (4 weeks)
 - **Complexity**: Medium (OAuth2.0 adds complexity vs. n8n-engage)
 - **Dependencies**: Node.js 18+, TypeScript 5+, n8n-workflow 1.0+
-- **Testing**: Requires Sinch Conversations API credentials
+- **Testing**: Requires Sinch Build Conversations API credentials
 - **Deployment**: NPM package registry
 
 ## 📊 Project Metrics

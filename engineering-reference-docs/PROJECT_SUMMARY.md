@@ -1,16 +1,16 @@
-# 📋 Sinch Conversations n8n Connector - Planning Summary
+# 📋 Sinch Build Conversations n8n Connector - Planning Summary
 
 **Date**: November 6, 2024  
 **Status**: ✅ Planning Complete | Ready for Implementation  
 **Estimated Duration**: 20 working days (4 weeks)  
-**Scope**: Send SMS + List Messages via Sinch Conversations API
+**Scope**: Send SMS + List Messages via Sinch Build Conversations API
 
 ---
 
 ## 🎯 What We're Building
 
 An n8n community node that enables users to:
-1. **Send SMS messages** through the Sinch Conversations API
+1. **Send SMS messages** through the Sinch Build Conversations API
 2. **List and filter messages** from conversations
 3. Use **OAuth2.0 authentication** (production-ready)
 4. Support **multiple regions** (US, EU, BR)
@@ -164,7 +164,7 @@ We're following the proven architecture from `/n8n/n8n-engage/`:
 
 ## 🔄 Comparison: MessageMedia vs. Sinch
 
-| Aspect             | MessageMedia (n8n-engage) | Sinch Conversations (new)                 |
+| Aspect             | MessageMedia (n8n-engage) | Sinch Build Conversations (new)                 |
 | ------------------ | ------------------------- | ----------------------------------------- |
 | **Auth**           | Basic Auth (simple)       | OAuth2.0 + Basic (complex)                |
 | **Token**          | None                      | Cached for 1 hour                         |
