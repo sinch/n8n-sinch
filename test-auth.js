@@ -27,7 +27,6 @@ const http = require('http');
 // };
 
 const credentials = {
-    authMethod: process.env.SINCH_AUTH_METHOD || 'oauth2',
     keyId: process.env.SINCH_KEY_ID || '00000000-0000-0000-0000-000000000000',
     keySecret: process.env.SINCH_KEY_SECRET || 'FAKE-SECRET-KEY-12345678',
     region: process.env.SINCH_REGION || 'us',
@@ -52,13 +51,12 @@ function validateCredentials() {
     console.error('  export SINCH_REGION="us" (optional, default: us)');
     console.error('  export SINCH_PROJECT_ID="your-project-id"');
     console.error('  export SINCH_APP_ID="your-app-id"');
-    console.error('  export SINCH_AUTH_METHOD="oauth2" (optional, default: oauth2)');
     console.error('  node test-auth.js');
     process.exit(1);
   }
-  
+
   console.log('✅ All required credentials provided');
-  console.log(`   Auth Method: ${credentials.authMethod}`);
+  console.log(`   Auth Method: OAuth2.0 (only option)`);
   console.log(`   Region: ${credentials.region}`);
   console.log(`   Key ID: ${credentials.keyId.substring(0, 8)}...`);
   console.log(`   Project ID: ${credentials.projectId}`);
@@ -137,46 +135,6 @@ async function testOAuth2Token() {
   }
 }
 
-// Test Basic Auth
-async function testBasicAuth() {
-  console.log('🔐 Testing Basic Authentication...');
-  
-  const auth = Buffer.from(`${credentials.keyId}:${credentials.keySecret}`).toString('base64');
-  const baseUrl = `https://${credentials.region}.conversation.api.sinch.com`;
-  const endpoint = `/v1/projects/${credentials.projectId}/apps/${credentials.appId}`;
-  
-  const options = {
-    protocol: 'https:',
-    hostname: `${credentials.region}.conversation.api.sinch.com`,
-    path: endpoint,
-    method: 'GET',
-    headers: {
-      'Authorization': `Basic ${auth}`,
-      'Accept': 'application/json',
-    },
-  };
-  
-  try {
-    const response = await makeRequest(options);
-    
-    if (response.status === 200) {
-      console.log('✅ Basic Auth test successful');
-      console.log('   Response:', JSON.stringify(response.body, null, 2));
-      return true;
-    } else {
-      console.error(`❌ Basic Auth test failed with status ${response.status}`);
-      console.error('   Response:', JSON.stringify(response.body, null, 2));
-      return false;
-    }
-  } catch (error) {
-    console.error('❌ Basic Auth test error:', error.message);
-    if (error.code) {
-      console.error(`   Error Code: ${error.code}`);
-    }
-    return false;
-  }
-}
-
 // Test API endpoint with OAuth2.0 token
 async function testApiEndpoint(accessToken) {
   console.log('🔍 Testing API Endpoint with OAuth2.0 Token...');
@@ -226,22 +184,17 @@ async function runTests() {
   
   console.log('='.repeat(60));
   console.log('');
-  
-  if (credentials.authMethod === 'oauth2') {
-    // Test OAuth2.0 flow
-    const token = await testOAuth2Token();
-    console.log('');
-    
-    if (token) {
-      await testApiEndpoint(token);
-    } else {
-      console.log('⚠️  Skipping API endpoint test (OAuth2.0 token fetch failed)');
-    }
+
+  // Test OAuth2.0 flow (only authentication method)
+  const token = await testOAuth2Token();
+  console.log('');
+
+  if (token) {
+    await testApiEndpoint(token);
   } else {
-    // Test Basic Auth
-    await testBasicAuth();
+    console.log('⚠️  Skipping API endpoint test (OAuth2.0 token fetch failed)');
   }
-  
+
   console.log('');
   console.log('='.repeat(60));
   console.log('✅ Test completed');

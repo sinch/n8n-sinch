@@ -14,8 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Initial alpha release
 - Send SMS message via Conversations API
 - List messages with filtering
-- OAuth2.0 authentication support with token caching (55-minute expiry)
-- Basic authentication support
+- OAuth2.0 authentication with token caching (55-minute expiry)
 - Regional endpoint selection (US/EU/BR)
 - Phone number normalization to E.164 format
 - Custom callback URL support

@@ -6,8 +6,7 @@ Community node for n8n to send and manage omnichannel messages via Sinch Build C
 
 - **Send SMS messages** via Sinch Build Conversations API
 - **List messages** with filtering and pagination
-- **OAuth2.0 authentication** with automatic token management (recommended for production)
-- **Basic authentication** support for testing
+- **OAuth2.0 authentication** with automatic token management
 - **Multi-region support** (US, EU, BR)
 - **Phone number normalization** to E.164 format
 - **Robust error handling** and validation
@@ -52,12 +51,13 @@ List and filter messages from conversations.
 ### Sinch Build Conversations API
 
 **Required Fields:**
-- **Authentication Method** - OAuth2.0 (recommended) or Basic Authentication
 - **Key ID (Client ID)** - Your Sinch API Key ID from the dashboard
 - **Key Secret (Client Secret)** - Your Sinch API Key Secret from the dashboard
 - **Region** - Region where your Conversation API app was created (US, EU, or BR)
 - **Project ID** - Your Sinch Project ID from the dashboard
 - **App ID** - Your Sinch Conversation API App ID
+
+**Authentication:** OAuth2.0 (automatic token management)
 
 ### Getting Your Credentials
 
@@ -127,20 +127,13 @@ List and filter messages from conversations.
 
 ## 🔄 Authentication
 
-### OAuth2.0 (Recommended)
+### OAuth2.0
 
 OAuth2.0 authentication is automatically handled:
 1. Tokens are fetched from `https://auth.sinch.com/oauth2/token`
 2. Tokens are cached for 55 minutes (5-minute buffer before expiry)
 3. Tokens are automatically refreshed when expired
 4. Bearer tokens are used in Authorization headers
-
-### Basic Authentication
-
-Basic authentication is available for testing:
-- Uses Key ID and Key Secret directly in Authorization header
-- No token caching
-- Rate limited by Sinch API
 
 ## 📞 Phone Number Format
 

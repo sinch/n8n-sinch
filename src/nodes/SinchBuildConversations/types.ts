@@ -5,8 +5,8 @@ export type SinchChannel = 'SMS' | 'WHATSAPP' | 'RCS' | 'MESSENGER' | 'VIBERBM';
 export type MessageStatus = 'queued' | 'sent' | 'failed';
 
 // Credentials structure
+// Note: Authentication is always OAuth2.0
 export interface SinchBuildConversationsCredentials {
-  authMethod: 'oauth2' | 'basic';
   keyId: string;
   keySecret: string;
   region: SinchRegion;

@@ -19,11 +19,6 @@ async function getAccessToken(
   context: IHookFunctions | IExecuteFunctions | ILoadOptionsFunctions,
   credentials: SinchBuildConversationsCredentials,
 ): Promise<string> {
-  // Check if using basic auth (return empty, will use basic auth header instead)
-  if (credentials.authMethod === 'basic') {
-    return '';
-  }
-
   // Create cache key
   const cacheKey = `${credentials.keyId}:${credentials.keySecret}`;
   const cached = tokenCache.get(cacheKey);
@@ -107,7 +102,7 @@ export async function makeSinchBuildConversationsRequest<T = any>(
   // Get credentials
   const credentials = (await context.getCredentials('SinchBuildConversationsApi')) as SinchBuildConversationsCredentials;
 
-  // Get access token (empty for basic auth)
+  // Get OAuth2.0 access token
   const accessToken = await getAccessToken(context, credentials);
 
   // Build full URL
@@ -120,8 +115,8 @@ export async function makeSinchBuildConversationsRequest<T = any>(
     'Accept': 'application/json',
   };
 
-  // Add authentication
-  if (credentials.authMethod === 'oauth2' && accessToken) {
+  // Add OAuth2.0 Bearer token authentication
+  if (accessToken) {
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
@@ -137,10 +132,6 @@ export async function makeSinchBuildConversationsRequest<T = any>(
       body: options.body,
       qs: options.qs,
       headers,
-      auth: credentials.authMethod === 'basic' ? {
-        username: credentials.keyId,
-        password: credentials.keySecret,
-      } : undefined,
       timeout: 30000, // 30s timeout for Conversations API
     });
 

@@ -64,8 +64,8 @@ export class SinchBuildConversationsApi implements ICredentialType {
   ];
 
   // Test the credentials by making a simple API call
-  // Note: Authentication is handled manually in sinchBuildConversationsHttp.ts
-  // to avoid the "Allowed HTTP Request Domains" field
+  // Note: This test uses Basic Auth for simplicity, but the actual node implementation
+  // uses OAuth2.0 (handled manually in sinchBuildConversationsHttp.ts)
   test: ICredentialTestRequest = {
     request: {
       baseURL: '={{$credentials.region ? `https://${$credentials.region}.conversation.api.sinch.com` : "https://us.conversation.api.sinch.com"}}',

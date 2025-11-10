@@ -42,7 +42,7 @@ const helpers: any = {
       ? JSON.stringify(opts.body)
       : opts.body;
     
-    // Handle Basic Auth
+    // Handle Basic Auth (used for OAuth2 token exchange with auth.sinch.com)
     const headers: any = { ...opts.headers };
     if (opts.auth && opts.auth.username && opts.auth.password) {
       const auth = Buffer.from(`${opts.auth.username}:${opts.auth.password}`).toString('base64');
@@ -83,7 +83,6 @@ const helpers: any = {
 };
 
 const mockCredentials: SinchBuildConversationsCredentials = {
-  authMethod: 'oauth2',
   keyId: 'FAKE-KEY-ID-11111111-1111-1111-1111-111111111111',
   keySecret: 'FAKE-SECRET-KEY-ABCDEFGHIJKLMNOP',
   region: 'us',
@@ -701,31 +700,6 @@ describe('Error Handling', () => {
       expect(error).toBeDefined();
       expect(error.message).toBeTruthy();
     }
-  });
-
-  it('uses basic auth when authMethod is basic', async () => {
-    // No OAuth2.0 token fetch needed for basic auth
-    const basicScope = nock('https://us.conversation.api.sinch.com')
-      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
-      .query({ app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' })
-      .matchHeader('authorization', /^Basic /) // Verify Basic Auth header is present
-      .reply(200, { messages: [] });
-
-    const context = {
-      helpers,
-      getCredentials: async () => ({
-        ...mockCredentials,
-        authMethod: 'basic' as const,
-      }),
-    } as any;
-
-    await makeSinchBuildConversationsRequest(context, {
-      method: 'GET',
-      endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
-      qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
-    });
-
-    expect(basicScope.isDone()).toBe(true);
   });
 });
 
