@@ -44,8 +44,8 @@ The test script performs the following checks:
    Auth Method: oauth2
    Region: us
    Key ID: abc12345...
-   Project ID: 01234567-89ab-cdef-0123-456789abcdef
-   App ID: 01ABCD23-4567-89EF-GHIJ-KLMNOPQRSTUV
+   Project ID: 00000000-0000-0000-0000-000000000000
+   App ID: 01AAAAAAAAAAAAAAAAAAAAAAAAAA
 
 ============================================================
 
@@ -105,8 +105,8 @@ The test script performs the following checks:
 | `SINCH_KEY_ID` | Yes | Your Sinch API Key ID | `abc12345-6789-...` |
 | `SINCH_KEY_SECRET` | Yes | Your Sinch API Key Secret | `xyz98765-4321-...` |
 | `SINCH_REGION` | No | Region (us/eu/br) | `us` (default) |
-| `SINCH_PROJECT_ID` | Yes | Your Sinch Project ID | `01234567-89ab-...` |
-| `SINCH_APP_ID` | Yes | Your Conversation API App ID | `01ABCD23-4567-...` |
+| `SINCH_PROJECT_ID` | Yes | Your Sinch Project ID | `00000000-0000-...` |
+| `SINCH_APP_ID` | Yes | Your Conversation API App ID | `01AAAAAAAAAA...` |
 | `SINCH_AUTH_METHOD` | No | Auth method (oauth2/basic) | `oauth2` (default) |
 
 ## Testing Different Scenarios

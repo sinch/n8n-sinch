@@ -245,7 +245,7 @@ export class SinchBuildConversationsApi implements ICredentialType {
       default: '',
       required: true,
       description: 'Your Sinch Project ID from the dashboard',
-      placeholder: 'e.g., 01234567-89ab-cdef-0123-456789abcdef',
+      placeholder: 'e.g., 00000000-0000-0000-0000-000000000000',
     },
     // App ID (used in messages)
     {
@@ -255,7 +255,7 @@ export class SinchBuildConversationsApi implements ICredentialType {
       default: '',
       required: true,
       description: 'Your Sinch Conversation API App ID',
-      placeholder: 'e.g., 01ABCD23-4567-89EF-GHIJ-KLMNOPQRSTUV',
+      placeholder: 'e.g., 01AAAAAAAAAAAAAAAAAAAAAAAAAA',
     },
   ];
 

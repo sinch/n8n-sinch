@@ -1,0 +1,30 @@
+{
+  "name": "Send SMS via Sinch Build Conversations",
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "to": "+15551234567",
+        "message": "Hello from n8n!",
+        "additionalFields": {
+          "callbackUrl": "https://webhook.site/unique-id"
+        }
+      },
+      "type": "@sinch-engage/n8n-nodes-sinch-build-conversations.SinchBuildConversations",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "id": "abc123",
+      "name": "Sinch Build Conversations",
+      "credentials": {
+        "SinchBuildConversationsApi": {
+          "id": "1",
+          "name": "Sinch Build Conversations API"
+        }
+      }
+    }
+  ],
+  "connections": {}
+}
+
+

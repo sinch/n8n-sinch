@@ -9,6 +9,11 @@ lib/
 coverage/
 .nyc_output/
 
+# Compiled test files (tests run directly from TypeScript)
+tests/**/*.js
+tests/**/*.js.map
+tests/**/*.d.ts
+
 # TypeScript build info
 *.tsbuildinfo
 
