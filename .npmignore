@@ -15,7 +15,22 @@ engineering-reference-docs/
 .eslintrc.json
 vitest.config.ts
 tsconfig.json
+tsconfig.test.json
 package-lock.json
+
+# Development scripts
+test-auth.js
+refresh-n8n.sh
+
+# AI workspace
+.claude/
+.cursor/
+
+# Source files (only shipping compiled dist/)
+src/
+
+# Test files
+tests/
 
 # Editor / system clutter
 .DS_Store

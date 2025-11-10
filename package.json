@@ -31,8 +31,6 @@
   },
   "files": [
     "dist/**/*",
-    "src/**/*",
-    "tests/**/*",
     "examples/**/*",
     "README.md",
     "CHANGELOG.md",
