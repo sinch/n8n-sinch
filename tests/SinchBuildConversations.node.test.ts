@@ -42,9 +42,16 @@ const helpers: any = {
       ? JSON.stringify(opts.body)
       : opts.body;
     
+    // Handle Basic Auth
+    const headers: any = { ...opts.headers };
+    if (opts.auth && opts.auth.username && opts.auth.password) {
+      const auth = Buffer.from(`${opts.auth.username}:${opts.auth.password}`).toString('base64');
+      headers['Authorization'] = `Basic ${auth}`;
+    }
+    
     const res = await (fetch.default as any)(fullUrl, {
       method: opts.method || 'GET',
-      headers: opts.headers,
+      headers,
       body,
     });
     
@@ -101,6 +108,33 @@ describe('Phone Number Normalization', () => {
     expect(normalizePhoneNumberToE164('123')).toEqual({ ok: false, error: expect.any(String) });
     expect(normalizePhoneNumberToE164('')).toEqual({ ok: false, error: 'Phone number is empty' });
   });
+
+  it('handles phone validation with and without country', () => {
+    // Test invalid number with country (should include country in error message)
+    const resultWithCountry = normalizePhoneNumberToE164('123', 'US');
+    expect(resultWithCountry.ok).toBe(false);
+    expect(resultWithCountry.error).toContain('country US');
+
+    // Test invalid number without country (should not include country in error message)
+    const resultWithoutCountry = normalizePhoneNumberToE164('+123');
+    expect(resultWithoutCountry.ok).toBe(false);
+    if (!resultWithoutCountry.ok) {
+      expect(resultWithoutCountry.error).not.toContain('country');
+    }
+  });
+
+  it('handles phone parsing errors (Error vs non-Error)', () => {
+    // Test with invalid input that causes parsing error
+    // This tests the catch block with error instanceof Error branch
+    const result = normalizePhoneNumberToE164('invalid-phone-number-that-causes-error');
+    expect(result.ok).toBe(false);
+    expect(result.error).toBeTruthy();
+    
+    // The error should be a string (either Error.message or 'Failed to parse phone number')
+    if (!result.ok) {
+      expect(typeof result.error).toBe('string');
+    }
+  });
 });
 
 describe('OAuth2.0 Token Management', () => {
@@ -136,6 +170,30 @@ describe('OAuth2.0 Token Management', () => {
 
     expect(authScope.isDone()).toBe(true);
     expect(apiScope.isDone()).toBe(true);
+  });
+
+  it('handles OAuth2.0 token fetch errors', async () => {
+    const authScope = nock('https://auth.sinch.com')
+      .post('/oauth2/token')
+      .reply(500, {
+        error: 'internal_error',
+        error_description: 'Internal server error',
+      });
+
+    const context = {
+      helpers,
+      getCredentials: async () => mockCredentials,
+    } as any;
+
+    await expect(
+      makeSinchBuildConversationsRequest(context, {
+        method: 'GET',
+        endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
+        qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
+      })
+    ).rejects.toThrow();
+
+    expect(authScope.isDone()).toBe(true);
   });
 
   it('uses cached token for subsequent requests', async () => {
@@ -287,6 +345,43 @@ describe('SinchBuildConversationsProvider', () => {
       })
     ).rejects.toThrow();
   });
+
+  it('sends message with optional fields (smsSender, callbackUrl, metadata)', async () => {
+    nock('https://auth.sinch.com')
+      .post('/oauth2/token')
+      .reply(200, {
+        access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
+        token_type: 'Bearer',
+        expires_in: 3600,
+      });
+
+    const sendScope = nock('https://us.conversation.api.sinch.com')
+      .post('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages:send', (body: any) => {
+        // Verify all optional fields are included
+        return body.channel_properties?.SMS_SENDER === 'TEST-SENDER' &&
+               body.callback_url === 'https://example.com/callback' &&
+               body.message_metadata === 'test-metadata';
+      })
+      .reply(200, {
+        message_id: 'msg-456',
+        accepted_time: '2024-01-01T00:00:00Z',
+      });
+
+    const provider = new SinchBuildConversationsProvider();
+    const result = await provider.send({
+      to: '+15551234567',
+      message: 'Test message',
+      smsSender: 'TEST-SENDER',
+      callbackUrl: 'https://example.com/callback',
+      metadata: 'test-metadata',
+      helpers,
+      credentials: mockCredentials,
+    });
+
+    expect(result.status).toBe('queued');
+    expect(result.messageId).toBe('msg-456');
+    expect(sendScope.isDone()).toBe(true);
+  });
 });
 
 describe('Regional Endpoints', () => {
@@ -382,6 +477,7 @@ describe('Regional Endpoints', () => {
 describe('Error Handling', () => {
   beforeEach(() => {
     nock.cleanAll();
+    clearTokenCache();
   });
 
   it('handles 401 Unauthorized', async () => {
@@ -448,6 +544,133 @@ describe('Error Handling', () => {
         qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
       })
     ).rejects.toThrow();
+  });
+
+  it('handles errors with status field', async () => {
+    nock('https://auth.sinch.com')
+      .post('/oauth2/token')
+      .reply(200, {
+        access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
+        token_type: 'Bearer',
+        expires_in: 3600,
+      });
+
+    nock('https://us.conversation.api.sinch.com')
+      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+      .query({ app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' })
+      .reply(400, {
+        error: {
+          code: 'INVALID_ARGUMENT',
+          message: 'Invalid request',
+          status: 'INVALID_ARGUMENT', // This triggers the errorStatus branch
+        },
+      });
+
+    const context = {
+      helpers,
+      getCredentials: async () => mockCredentials,
+    } as any;
+
+    await expect(
+      makeSinchBuildConversationsRequest(context, {
+        method: 'GET',
+        endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
+        qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
+      })
+    ).rejects.toThrow();
+  });
+
+  it('handles errors without status field', async () => {
+    nock('https://auth.sinch.com')
+      .post('/oauth2/token')
+      .reply(200, {
+        access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
+        token_type: 'Bearer',
+        expires_in: 3600,
+      });
+
+    nock('https://us.conversation.api.sinch.com')
+      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+      .query({ app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' })
+      .reply(500, {
+        error: {
+          code: 'INTERNAL_ERROR',
+          message: 'Server error',
+          // No status field - tests the branch without errorStatus
+        },
+      });
+
+    const context = {
+      helpers,
+      getCredentials: async () => mockCredentials,
+    } as any;
+
+    await expect(
+      makeSinchBuildConversationsRequest(context, {
+        method: 'GET',
+        endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
+        qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
+      })
+    ).rejects.toThrow();
+  });
+
+  it('handles errors with errorCode but no errorStatus', async () => {
+    nock('https://auth.sinch.com')
+      .post('/oauth2/token')
+      .reply(200, {
+        access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
+        token_type: 'Bearer',
+        expires_in: 3600,
+      });
+
+    nock('https://us.conversation.api.sinch.com')
+      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+      .query({ app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' })
+      .reply(400, {
+        error: {
+          code: 'BAD_REQUEST',
+          message: 'Bad request',
+          // Has code but no status field - tests errorCode branch without errorStatus
+        },
+      });
+
+    const context = {
+      helpers,
+      getCredentials: async () => mockCredentials,
+    } as any;
+
+    await expect(
+      makeSinchBuildConversationsRequest(context, {
+        method: 'GET',
+        endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
+        qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
+      })
+    ).rejects.toThrow();
+  });
+
+  it('uses basic auth when authMethod is basic', async () => {
+    // No OAuth2.0 token fetch needed for basic auth
+    const basicScope = nock('https://us.conversation.api.sinch.com')
+      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+      .query({ app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' })
+      .matchHeader('authorization', /^Basic /) // Verify Basic Auth header is present
+      .reply(200, { messages: [] });
+
+    const context = {
+      helpers,
+      getCredentials: async () => ({
+        ...mockCredentials,
+        authMethod: 'basic' as const,
+      }),
+    } as any;
+
+    await makeSinchBuildConversationsRequest(context, {
+      method: 'GET',
+      endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
+      qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
+    });
+
+    expect(basicScope.isDone()).toBe(true);
   });
 });
 

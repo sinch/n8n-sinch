@@ -9,6 +9,7 @@ unpublish-dev-package.sh
 
 # Internal documentation not intended for npm consumers
 docs/
+engineering-reference-docs/
 
 # Local development configs (optional exclusion; remove if you want to ship)
 .eslintrc.json
