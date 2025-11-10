@@ -10,7 +10,7 @@ import { NodeApiError } from 'n8n-workflow';
 import { normalizePhoneNumberToE164 } from '../../utils/phone';
 import { SinchBuildConversationsProvider } from './providers/SinchBuildConversationsProvider';
 import { makeSinchBuildConversationsRequest } from '../../utils/sinchBuildConversationsHttp';
-import type { SinchBuildConversationsCredentials, ListMessagesResponse, ListMessagesParams, GetMessageResponse } from './types';
+import type { SinchBuildConversationsCredentials, ListMessagesResponse, ListMessagesParams } from './types';
 import * as countries from 'i18n-iso-countries';
 import enLocale = require('i18n-iso-countries/langs/en.json');
 
@@ -469,86 +469,6 @@ export class SinchBuildConversations implements INodeType {
           } catch (error) {
             const e = error as Error;
             throw new NodeApiError(this.getNode(), { message: e.message });
-          }
-        } else if (operation === 'get') {
-          // GET MESSAGE OPERATION
-          // For Get Message, we process each input item separately (n8n pattern)
-          // Each item can have its own messageId, or we use the parameter
-          let messageId = this.getNodeParameter('messageId', itemIndex) as string;
-
-          // If messageId is empty, try to get it from the input item
-          if (!messageId || messageId.trim() === '') {
-            const inputItem = items[itemIndex];
-            if (inputItem?.json?.messageId) {
-              messageId = inputItem.json.messageId as string;
-            } else {
-              throw new NodeApiError(this.getNode(), {
-                message: 'Message ID is required',
-                description: 'Please provide a Message ID either in the node parameter or from the input item (messageId field).',
-              });
-            }
-          }
-
-          // Build endpoint: GET /v1/projects/{project_id}/messages/{message_id}
-          const endpoint = `/v1/projects/${credentials.projectId}/messages/${messageId}`;
-
-          try {
-            const msg = await makeSinchBuildConversationsRequest<GetMessageResponse>(this, {
-              method: 'GET',
-              endpoint,
-            });
-
-            // Extract text from app_message (outbound) or contact_message (inbound)
-            // Note: Get Message endpoint may not always include message content
-            const text = msg.direction === 'TO_CONTACT'
-              ? (msg.app_message?.text_message?.text || '')
-              : (msg.contact_message?.text_message?.text || '');
-
-            returnData.push({
-              json: {
-                messageId: msg.id,
-                direction: msg.direction,
-                acceptTime: msg.accept_time,
-                channel: msg.channel_identity.channel,
-                identity: msg.channel_identity.identity,
-                appId: msg.channel_identity.app_id || '',
-                contactId: msg.contact_id || '',
-                conversationId: msg.conversation_id || '',
-                text,
-                metadata: msg.metadata || '',
-                // Additional fields from Get Message endpoint
-                injected: msg.injected || false,
-                senderId: msg.sender_id || '',
-                processingMode: msg.processing_mode || '',
-                // Include full message structure for advanced use cases
-                appMessage: msg.app_message,
-                contactMessage: msg.contact_message,
-                // Include raw response for debugging/advanced use
-                raw: msg,
-              } as unknown as IDataObject,
-            });
-          } catch (error: any) {
-            // Provide more detailed error information
-            const errorMessage = error.message || 'Unknown error';
-            const statusCode = error.statusCode || error.response?.statusCode || error.response?.status;
-            
-            // Check if it's a 404 error
-            if (statusCode === 404) {
-              throw new NodeApiError(this.getNode(), {
-                message: `Message not found (404)`,
-                description: `The message with ID "${messageId}" was not found. This could mean:\n` +
-                  `- The message ID is incorrect\n` +
-                  `- The message belongs to a different project\n` +
-                  `- The message has been deleted or expired\n` +
-                  `- The message ID format is invalid\n\n` +
-                  `Verify the message ID by using the List Messages operation first.`,
-              });
-            }
-            
-            throw new NodeApiError(this.getNode(), {
-              message: `Failed to get message: ${errorMessage}`,
-              description: `Message ID: ${messageId}. Status: ${statusCode || 'Unknown'}`,
-            });
           }
         }
       }

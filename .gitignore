@@ -40,6 +40,7 @@ docs/
 tmp/
 temp/
 *.tmp
+*.claude
 
 # n8n specific (if packaging custom nodes)
 # Only ignore credential data files, not TypeScript source files
