@@ -56,7 +56,6 @@
     "@types/node-fetch": "^2.6.13",
     "@typescript-eslint/eslint-plugin": "^7.16.0",
     "@typescript-eslint/parser": "^7.16.0",
-    "@vitest/coverage-v8": "^4.0.8",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
     "n8n-core": "^1.0.0",
