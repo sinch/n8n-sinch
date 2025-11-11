@@ -63,17 +63,19 @@ export class SinchApi implements ICredentialType {
     },
   ];
 
-  // Test the credentials by making a simple API call
-  // Note: This test uses Basic Auth for simplicity, but the actual node implementation
-  // uses OAuth2.0 (handled manually in sinchHttp.ts)
+  // Test the credentials by attempting to obtain an OAuth2.0 access token
+  // This validates that the Key ID and Key Secret are correct
   test: ICredentialTestRequest = {
     request: {
-      baseURL: '={{$credentials.region ? `https://${$credentials.region}.conversation.api.sinch.com` : "https://us.conversation.api.sinch.com"}}',
-      url: '/v1/projects/={{$credentials.projectId}}/apps/={{$credentials.appId}}',
-      method: 'GET',
+      method: 'POST',
+      url: 'https://auth.sinch.com/oauth2/token',
+      body: 'grant_type=client_credentials',
       auth: {
         username: '={{$credentials.keyId}}',
         password: '={{$credentials.keySecret}}',
+      },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
       },
     },
   };
