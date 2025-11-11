@@ -10,7 +10,7 @@ echo "=============================="
 
 # Check if we're in the right directory
 if [[ ! -f "package.json" ]]; then
-    echo "❌ Error: Please run this script from the n8n-engage project root directory"
+    echo "❌ Error: Please run this script from the n8n-build project root directory"
     exit 1
 fi
 
@@ -39,7 +39,7 @@ if [[ -n "$DEPENDENTS" ]]; then
     echo "Dependents: $DEPENDENTS"
     echo ""
     echo "💡 Alternative: Deprecate instead"
-    echo "   npm deprecate $PACKAGE_NAME@$PACKAGE_VERSION \"Superseded by @sinch-engage/n8n-nodes-sinch-engage\""
+    echo "   npm deprecate $PACKAGE_NAME@$PACKAGE_VERSION \"Superseded by @sinch-engage/n8n-nodes-sinch\""
     exit 1
 fi
 
@@ -90,7 +90,7 @@ if [[ $? -eq 0 ]]; then
     echo "   Status: Unpublished"
     echo ""
     echo "🎯 Next Steps:"
-    echo "   1. Update package.json name to @sinch-engage/n8n-nodes-sinch-engage"
+    echo "   1. Package name is: @sinch-engage/n8n-nodes-sinch"
     echo "   2. Update version for production release"
     echo "   3. Deploy to Sinch Engage organization"
     echo "   4. Update deployment script for organization scope"

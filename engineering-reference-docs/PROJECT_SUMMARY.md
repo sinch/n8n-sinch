@@ -106,7 +106,7 @@ We're following the proven architecture from `/n8n/n8n-engage/`:
 - Regional endpoint selection
 - Credential testing
 
-**Files**: `SinchBuildConversationsApi.credentials.ts`, `SinchBuildConversationsHttp.ts`
+**Files**: `SinchApi.credentials.ts`, `SinchHttp.ts`
 
 ### Phase 3: Send Message (Days 6-8)
 **Goal**: Send SMS via Conversations API
@@ -115,7 +115,7 @@ We're following the proven architecture from `/n8n/n8n-engage/`:
 - Provider implementation
 - Response handling
 
-**Files**: `SinchBuildConversationsProvider.ts`, `SinchBuildConversations.node.ts`
+**Files**: `SinchProvider.ts`, `Sinch.node.ts`
 
 ### Phase 4: List Messages (Days 9-10)
 **Goal**: Query and filter messages
@@ -124,7 +124,7 @@ We're following the proven architecture from `/n8n/n8n-engage/`:
 - Pagination support
 - Response parsing
 
-**Files**: Update `SinchBuildConversations.node.ts`
+**Files**: Update `Sinch.node.ts`
 
 ### Phase 5: Testing (Days 11-13)
 **Goal**: Comprehensive test coverage
@@ -133,7 +133,7 @@ We're following the proven architecture from `/n8n/n8n-engage/`:
 - Mock HTTP requests
 - Regional endpoint tests
 
-**Files**: `SinchBuildConversations.node.test.ts`, mocks
+**Files**: `Sinch.node.test.ts`, mocks
 
 ### Phase 6: Documentation (Days 14-15)
 **Goal**: Professional documentation
@@ -245,8 +245,8 @@ cat QUICK_START_GUIDE.md
 **Step 2**: Begin implementation (Day 1-3)
 ```bash
 # Create project directory
-mkdir n8n-nodes-sinch-build-conversations
-cd n8n-nodes-sinch-build-conversations
+mkdir n8n-nodes-sinch
+cd n8n-nodes-sinch
 
 # Follow Quick Start Guide for setup
 ```
@@ -291,8 +291,8 @@ cd n8n-nodes-sinch-build-conversations
 - **n8n-engage Reference**: `/Users/liaher/Developer/connectors/n8n/n8n-engage/`
 
 ### Development
-- **NPM Package**: `@sinch-engage/n8n-nodes-sinch-build-conversations`
-- **Alpha Tag**: `@sinch-engage/n8n-nodes-sinch-build-conversations@alpha`
+- **NPM Package**: `@sinch-engage/n8n-nodes-sinch`
+- **Alpha Tag**: `@sinch-engage/n8n-nodes-sinch@alpha`
 - **Repository**: (internal)
 
 ---

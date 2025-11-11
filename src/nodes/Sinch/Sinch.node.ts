@@ -8,9 +8,9 @@ import type {
 } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';
 import { normalizePhoneNumberToE164 } from '../../utils/phone';
-import { SinchBuildConversationsProvider } from './providers/SinchBuildConversationsProvider';
-import { makeSinchBuildConversationsRequest } from '../../utils/sinchBuildConversationsHttp';
-import type { SinchBuildConversationsCredentials, ListMessagesResponse, ListMessagesParams } from './types';
+import { SinchProvider } from './providers/SinchProvider';
+import { makeSinchRequest } from '../../utils/sinchHttp';
+import type { SinchCredentials, ListMessagesResponse, ListMessagesParams } from './types';
 import * as countries from 'i18n-iso-countries';
 import enLocale = require('i18n-iso-countries/langs/en.json');
 
@@ -28,22 +28,22 @@ function getCountryOptions() {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
-export class SinchBuildConversations implements INodeType {
+export class Sinch implements INodeType {
   description: INodeTypeDescription = {
-    displayName: 'Sinch Build Conversations',
-    name: 'SinchBuildConversations',
+    displayName: 'Sinch',
+    name: 'Sinch',
     icon: 'file:sinch-logo.png',
     group: ['transform'],
     version: 1,
     subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
-    description: 'Send and manage omnichannel messages via Sinch Build Conversations API',
+    description: 'Send and manage omnichannel messages via Sinch Conversations API',
     defaults: {
-      name: 'Sinch Build Conversations',
+      name: 'Sinch',
     },
     inputs: ['main' as NodeConnectionType],
     outputs: ['main' as NodeConnectionType],
     credentials: [
-      { name: 'SinchBuildConversationsApi', required: true },
+      { name: 'SinchApi', required: true },
     ],
     properties: [
       // RESOURCE SELECTION
@@ -253,7 +253,7 @@ export class SinchBuildConversations implements INodeType {
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
-    const credentials = (await this.getCredentials('SinchBuildConversationsApi')) as SinchBuildConversationsCredentials;
+    const credentials = (await this.getCredentials('SinchApi')) as SinchCredentials;
 
     for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
       const resource = this.getNodeParameter('resource', itemIndex) as string;
@@ -287,7 +287,7 @@ export class SinchBuildConversations implements INodeType {
             });
           }
 
-          const provider = new SinchBuildConversationsProvider();
+          const provider = new SinchProvider();
 
           try {
             const providerResult = await provider.send({
@@ -342,7 +342,7 @@ export class SinchBuildConversations implements INodeType {
           const endpoint = `/v1/projects/${credentials.projectId}/messages`;
 
           try {
-            const response = await makeSinchBuildConversationsRequest<ListMessagesResponse>(this, {
+            const response = await makeSinchRequest<ListMessagesResponse>(this, {
               method: 'GET',
               endpoint,
               qs: queryParams,

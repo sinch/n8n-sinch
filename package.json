@@ -1,5 +1,5 @@
 {
-  "name": "@sinch-engage/n8n-nodes-sinch-build-conversations",
+  "name": "@sinch-engage/n8n-nodes-sinch",
   "version": "1.0.0-alpha-0",
   "description": "n8n community node for Sinch Build Conversations API - send and manage omnichannel messages",
   "keywords": [
@@ -19,10 +19,10 @@
   "types": "dist/index.d.ts",
   "n8n": {
     "nodes": [
-      "dist/nodes/SinchBuildConversations/SinchBuildConversations.node.js"
+      "dist/nodes/Sinch/Sinch.node.js"
     ],
     "credentials": [
-      "dist/credentials/SinchBuildConversationsApi.credentials.js"
+      "dist/credentials/SinchApi.credentials.js"
     ]
   },
   "directories": {
@@ -38,7 +38,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && npm run copy:icons",
-    "copy:icons": "mkdir -p dist/nodes/SinchBuildConversations && cp -f src/nodes/SinchBuildConversations/*.png src/nodes/SinchBuildConversations/*.svg dist/nodes/SinchBuildConversations/ 2>/dev/null || true",
+    "copy:icons": "mkdir -p dist/nodes/Sinch && cp -f src/nodes/Sinch/*.png src/nodes/Sinch/*.svg dist/nodes/Sinch/ 2>/dev/null || true",
     "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0 --fix",
     "test": "vitest run --coverage",

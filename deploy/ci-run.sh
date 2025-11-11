@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Optimized dockerized Node 20 CI runner for n8n engage community connector
+# Optimized dockerized Node 20 CI runner for n8n build conversations community connector
 # Usage: ./deploy/ci-run.sh <install|lint|build|test|release>
 # Uses persistent container with cached dependencies for better performance
 

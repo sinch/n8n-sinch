@@ -1,5 +1,5 @@
 import { ProviderHttpError } from '../../../utils/errors';
-import { makeSinchBuildConversationsRequest } from '../../../utils/sinchBuildConversationsHttp';
+import { makeSinchRequest } from '../../../utils/sinchHttp';
 import type {
   SendMessageRequest,
   SendMessageResponse,
@@ -7,7 +7,7 @@ import type {
   ProviderSendResult,
 } from '../types';
 
-export class SinchBuildConversationsProvider {
+export class SinchProvider {
   async send(params: ProviderSendParams): Promise<ProviderSendResult> {
     const { to, message, smsSender, callbackUrl, metadata, helpers, credentials } = params;
 
@@ -54,7 +54,7 @@ export class SinchBuildConversationsProvider {
       // Cast helpers to provide context for shared utility
       const context = { helpers, getCredentials: async () => credentials } as any;
 
-      const response = await makeSinchBuildConversationsRequest<SendMessageResponse>(context, {
+      const response = await makeSinchRequest<SendMessageResponse>(context, {
         method: 'POST',
         endpoint,
         body: requestBody,
@@ -70,7 +70,7 @@ export class SinchBuildConversationsProvider {
     } catch (err) {
       const error = err as { statusCode?: number; message?: string; response?: unknown };
       throw new ProviderHttpError(
-        error.message || 'Sinch Build Conversations API request failed',
+        error.message || 'Sinch API request failed',
         error.statusCode,
         error.response,
       );

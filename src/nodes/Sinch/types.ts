@@ -6,7 +6,7 @@ export type MessageStatus = 'queued' | 'sent' | 'failed';
 
 // Credentials structure
 // Note: Authentication is always OAuth2.0
-export interface SinchBuildConversationsCredentials {
+export interface SinchCredentials {
   keyId: string;
   keySecret: string;
   region: SinchRegion;
@@ -133,7 +133,7 @@ export interface ProviderSendParams {
   callbackUrl?: string;
   metadata?: string;
   helpers: IExecuteFunctions['helpers'];
-  credentials: SinchBuildConversationsCredentials;
+  credentials: SinchCredentials;
 }
 
 // Provider send result

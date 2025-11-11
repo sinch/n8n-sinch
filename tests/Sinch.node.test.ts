@@ -14,9 +14,9 @@ vi.mock('n8n-workflow', async () => {
 });
 
 import { normalizePhoneNumberToE164 } from '../src/utils/phone';
-import { SinchBuildConversationsProvider } from '../src/nodes/SinchBuildConversations/providers/SinchBuildConversationsProvider';
-import { makeSinchBuildConversationsRequest, clearTokenCache } from '../src/utils/sinchBuildConversationsHttp';
-import type { SinchBuildConversationsCredentials } from '../src/nodes/SinchBuildConversations/types';
+import { SinchProvider } from '../src/nodes/Sinch/providers/SinchProvider';
+import { makeSinchRequest, clearTokenCache } from '../src/utils/sinchHttp';
+import type { SinchCredentials } from '../src/nodes/Sinch/types';
 
 const helpers: any = {
   httpRequest: async (opts: any) => {
@@ -82,7 +82,7 @@ const helpers: any = {
   },
 };
 
-const mockCredentials: SinchBuildConversationsCredentials = {
+const mockCredentials: SinchCredentials = {
   keyId: 'FAKE-KEY-ID-11111111-1111-1111-1111-111111111111',
   keySecret: 'FAKE-SECRET-KEY-ABCDEFGHIJKLMNOP',
   region: 'us',
@@ -161,7 +161,7 @@ describe('OAuth2.0 Token Management', () => {
       getCredentials: async () => mockCredentials,
     } as any;
 
-    await makeSinchBuildConversationsRequest(context, {
+    await makeSinchRequest(context, {
       method: 'GET',
       endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
       qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
@@ -185,7 +185,7 @@ describe('OAuth2.0 Token Management', () => {
     } as any;
 
     await expect(
-      makeSinchBuildConversationsRequest(context, {
+      makeSinchRequest(context, {
         method: 'GET',
         endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
         qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
@@ -220,14 +220,14 @@ describe('OAuth2.0 Token Management', () => {
     } as any;
 
     // First request - should fetch token
-    await makeSinchBuildConversationsRequest(context, {
+    await makeSinchRequest(context, {
       method: 'GET',
       endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
       qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
     });
 
     // Second request - should use cached token
-    await makeSinchBuildConversationsRequest(context, {
+    await makeSinchRequest(context, {
       method: 'GET',
       endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
       qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
@@ -239,7 +239,7 @@ describe('OAuth2.0 Token Management', () => {
   });
 });
 
-describe('SinchBuildConversationsProvider', () => {
+describe('SinchProvider', () => {
   beforeEach(() => {
     nock.cleanAll();
   });
@@ -280,7 +280,7 @@ describe('SinchBuildConversationsProvider', () => {
         accepted_time: '2024-01-01T00:00:00Z',
       });
 
-    const provider = new SinchBuildConversationsProvider();
+    const provider = new SinchProvider();
     const result = await provider.send({
       to: '+15551234567',
       message: 'Hello from n8n!',
@@ -302,7 +302,7 @@ describe('SinchBuildConversationsProvider', () => {
         error_description: 'Invalid credentials',
       });
 
-    const provider = new SinchBuildConversationsProvider();
+    const provider = new SinchProvider();
     
     await expect(
       provider.send({
@@ -333,7 +333,7 @@ describe('SinchBuildConversationsProvider', () => {
         },
       });
 
-    const provider = new SinchBuildConversationsProvider();
+    const provider = new SinchProvider();
     
     await expect(
       provider.send({
@@ -366,7 +366,7 @@ describe('SinchBuildConversationsProvider', () => {
         accepted_time: '2024-01-01T00:00:00Z',
       });
 
-    const provider = new SinchBuildConversationsProvider();
+    const provider = new SinchProvider();
     const result = await provider.send({
       to: '+15551234567',
       message: 'Test message',
@@ -407,7 +407,7 @@ describe('Regional Endpoints', () => {
       getCredentials: async () => ({ ...mockCredentials, region: 'us' }),
     } as any;
 
-    await makeSinchBuildConversationsRequest(context, {
+    await makeSinchRequest(context, {
       method: 'GET',
       endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
       qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
@@ -435,7 +435,7 @@ describe('Regional Endpoints', () => {
       getCredentials: async () => ({ ...mockCredentials, region: 'eu' }),
     } as any;
 
-    await makeSinchBuildConversationsRequest(context, {
+    await makeSinchRequest(context, {
       method: 'GET',
       endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
       qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
@@ -463,7 +463,7 @@ describe('Regional Endpoints', () => {
       getCredentials: async () => ({ ...mockCredentials, region: 'br' }),
     } as any;
 
-    await makeSinchBuildConversationsRequest(context, {
+    await makeSinchRequest(context, {
       method: 'GET',
       endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
       qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
@@ -504,7 +504,7 @@ describe('Error Handling', () => {
     } as any;
 
     await expect(
-      makeSinchBuildConversationsRequest(context, {
+      makeSinchRequest(context, {
         method: 'GET',
         endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
         qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
@@ -537,7 +537,7 @@ describe('Error Handling', () => {
     } as any;
 
     await expect(
-      makeSinchBuildConversationsRequest(context, {
+      makeSinchRequest(context, {
         method: 'GET',
         endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
         qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
@@ -575,7 +575,7 @@ describe('Error Handling', () => {
     } as any;
 
     try {
-      await makeSinchBuildConversationsRequest(context, {
+      await makeSinchRequest(context, {
         method: 'GET',
         endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
         qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
@@ -617,7 +617,7 @@ describe('Error Handling', () => {
     } as any;
 
     await expect(
-      makeSinchBuildConversationsRequest(context, {
+      makeSinchRequest(context, {
         method: 'GET',
         endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
         qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
@@ -651,7 +651,7 @@ describe('Error Handling', () => {
     } as any;
 
     await expect(
-      makeSinchBuildConversationsRequest(context, {
+      makeSinchRequest(context, {
         method: 'GET',
         endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
         qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
@@ -689,7 +689,7 @@ describe('Error Handling', () => {
     } as any;
 
     try {
-      await makeSinchBuildConversationsRequest(context, {
+      await makeSinchRequest(context, {
         method: 'GET',
         endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
         qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },

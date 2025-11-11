@@ -1,5 +1,5 @@
 {
-  "name": "Send SMS via Sinch Build Conversations",
+  "name": "Send SMS via Sinch",
   "nodes": [
     {
       "parameters": {
@@ -11,15 +11,15 @@
           "callbackUrl": "https://webhook.site/unique-id"
         }
       },
-      "type": "@sinch-engage/n8n-nodes-sinch-build-conversations.SinchBuildConversations",
+      "type": "@sinch-engage/n8n-nodes-sinch.Sinch",
       "typeVersion": 1,
       "position": [250, 300],
       "id": "abc123",
-      "name": "Sinch Build Conversations",
+      "name": "Sinch",
       "credentials": {
-        "SinchBuildConversationsApi": {
+        "SinchApi": {
           "id": "1",
-          "name": "Sinch Build Conversations API"
+          "name": "Sinch API"
         }
       }
     }

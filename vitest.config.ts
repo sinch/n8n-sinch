@@ -22,7 +22,7 @@ export default defineConfig({
         'src/index.ts', // Just exports, no logic to test
         'src/**/types.ts', // Type definitions only
         'src/credentials/**', // Credentials are mostly configuration, need integration tests
-        'src/nodes/**/SinchBuildConversations.node.ts', // Main node file needs integration tests
+        'src/nodes/**/Sinch.node.ts', // Main node file needs integration tests
         'test-auth.js', // Standalone script, not part of source
         'vitest.config.ts', // Config file
       ],

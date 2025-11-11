@@ -1,9 +1,9 @@
-import { SinchBuildConversations } from './nodes/SinchBuildConversations/SinchBuildConversations.node';
-import { SinchBuildConversationsApi } from './credentials/SinchBuildConversationsApi.credentials';
+import { Sinch } from './nodes/Sinch/Sinch.node';
+import { SinchApi } from './credentials/SinchApi.credentials';
 
 export default {
-  nodes: [SinchBuildConversations],
-  credentials: [SinchBuildConversationsApi],
+  nodes: [Sinch],
+  credentials: [SinchApi],
 };
 
 

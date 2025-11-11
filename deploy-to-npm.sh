@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# n8n-nodes-sinch-engage NPM Deployment Script
+# n8n-nodes-sinch NPM Deployment Script
 # This script publishes the package to NPM using your personal access token
 
 set -e
 
-echo "🚀 n8n-nodes-sinch-engage NPM Deployment"
-echo "========================================"
+echo "🚀 n8n-nodes-sinch NPM Deployment"
+echo "=================================="
 
 # Check if we're in the right directory
 if [[ ! -f "package.json" ]]; then
@@ -16,9 +16,9 @@ fi
 
 # Validate package name against expected development or production variants
 PACKAGE_NAME=$(grep '"name"' package.json | cut -d'"' -f4)
-EXPECTED_DEV_NAME="n8n-nodes-sinch-engage-dev"
-EXPECTED_ALT_DEV_NAME="na10-nodes-sinch-engage-dev" # legacy documented name
-EXPECTED_PROD_NAME="@sinch-engage/n8n-nodes-sinch-engage"
+EXPECTED_DEV_NAME="n8n-nodes-sinch-dev"
+EXPECTED_ALT_DEV_NAME="n8n-nodes-sinch-build-dev" # legacy name
+EXPECTED_PROD_NAME="@sinch-engage/n8n-nodes-sinch"
 
 if [[ "$PACKAGE_NAME" != "$EXPECTED_DEV_NAME" && "$PACKAGE_NAME" != "$EXPECTED_ALT_DEV_NAME" && "$PACKAGE_NAME" != "$EXPECTED_PROD_NAME" ]]; then
     echo "❌ Error: Unexpected package name '$PACKAGE_NAME'." >&2

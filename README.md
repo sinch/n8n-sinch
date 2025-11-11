@@ -1,10 +1,10 @@
-# n8n-nodes-sinch-build-conversations
+# n8n-nodes-sinch
 
-Community node for n8n to send and manage omnichannel messages via Sinch Build Conversations API.
+Community node for n8n to send and manage omnichannel messages via Sinch Conversations API.
 
 ## ✨ Features
 
-- **Send SMS messages** via Sinch Build Conversations API
+- **Send SMS messages** via Sinch Conversations API
 - **List messages** with filtering and pagination
 - **OAuth2.0 authentication** with automatic token management
 - **Multi-region support** (US, EU, BR)
@@ -16,7 +16,7 @@ Community node for n8n to send and manage omnichannel messages via Sinch Build C
 ### Basic Information
 
 - **Display Name**: Sinch Build
-- **Name**: `SinchBuildConversations`
+- **Name**: `Sinch`
 - **Group**: `transform`
 - **Inputs**: `main`
 - **Outputs**: `main`
@@ -25,7 +25,7 @@ Community node for n8n to send and manage omnichannel messages via Sinch Build C
 
 #### Send Message
 
-Send SMS messages via Sinch Build Conversations API.
+Send SMS messages via Sinch Conversations API.
 
 **Fields:**
 - **To** (required) - Recipient phone number in E.164 format (e.g., +15551234567)
@@ -48,7 +48,7 @@ List and filter messages from conversations.
 
 ## 🔐 Credentials
 
-### Sinch Build Conversations API
+### Sinch Conversations API
 
 **Required Fields:**
 - **Key ID (Client ID)** - Your Sinch API Key ID from the dashboard
@@ -67,7 +67,7 @@ List and filter messages from conversations.
 4. Create a Conversation API app
 5. Note your Project ID and App ID
 
-## 📱 Sinch Build Conversations API Integration
+## 📱 Sinch Conversations API Integration
 
 ### API Endpoints
 
@@ -166,15 +166,15 @@ Phone numbers must be in E.164 format:
           "callbackUrl": "https://webhook.site/unique-id"
         }
       },
-      "type": "@sinch-engage/n8n-nodes-sinch-build-conversations.SinchBuildConversations",
+      "type": "@sinch-engage/n8n-nodes-sinch.Sinch",
       "typeVersion": 1,
       "position": [250, 300],
       "id": "abc123",
       "name": "Sinch Build Conversations",
       "credentials": {
-        "SinchBuildConversationsApi": {
+        "SinchApi": {
           "id": "1",
-          "name": "Sinch Build Conversations API"
+          "name": "Sinch Conversations API"
         }
       }
     }
@@ -206,7 +206,7 @@ Phone numbers must be in E.164 format:
 
 ## 📚 Resources
 
-- **Sinch Build Conversations API Docs**: https://developers.sinch.com/docs/conversation/
+- **Sinch Conversations API Docs**: https://developers.sinch.com/docs/conversation/
 - **Send Message Endpoint**: https://developers.sinch.com/docs/conversation/api-reference/conversation/messages/messages_sendmessage
 - **List Messages Endpoint**: https://developers.sinch.com/docs/conversation/api-reference/conversation/messages/messages_listmessages
 - **OAuth2.0 Guide**: https://developers.sinch.com/docs/conversation/api-reference/conversation/#oauth20-authentication

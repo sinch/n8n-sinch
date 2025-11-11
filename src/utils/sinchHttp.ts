@@ -1,5 +1,5 @@
 import type { IExecuteFunctions, IHookFunctions, ILoadOptionsFunctions } from 'n8n-workflow';
-import type { SinchBuildConversationsCredentials, OAuth2TokenResponse, SinchRegion } from '../nodes/SinchBuildConversations/types';
+import type { SinchCredentials, OAuth2TokenResponse, SinchRegion } from '../nodes/Sinch/types';
 import { SinchApiError } from './errors';
 
 // Token cache (in-memory, keyed by credentials)
@@ -17,7 +17,7 @@ export function clearTokenCache(): void {
  */
 async function getAccessToken(
   context: IHookFunctions | IExecuteFunctions | ILoadOptionsFunctions,
-  credentials: SinchBuildConversationsCredentials,
+  credentials: SinchCredentials,
 ): Promise<string> {
   // Create cache key
   const cacheKey = `${credentials.keyId}:${credentials.keySecret}`;
@@ -87,10 +87,10 @@ function getBaseUrl(region: SinchRegion): string {
 }
 
 /**
- * Make an authenticated request to the Sinch Build Conversations API.
+ * Make an authenticated request to the Sinch API.
  * Handles OAuth2.0 token management and regional endpoints.
  */
-export async function makeSinchBuildConversationsRequest<T = any>(
+export async function makeSinchRequest<T = any>(
   context: IHookFunctions | IExecuteFunctions | ILoadOptionsFunctions,
   options: {
     method: 'GET' | 'POST' | 'DELETE' | 'PUT' | 'PATCH';
@@ -100,7 +100,7 @@ export async function makeSinchBuildConversationsRequest<T = any>(
   },
 ): Promise<T> {
   // Get credentials
-  const credentials = (await context.getCredentials('SinchBuildConversationsApi')) as SinchBuildConversationsCredentials;
+  const credentials = (await context.getCredentials('SinchApi')) as SinchCredentials;
 
   // Get OAuth2.0 access token
   const accessToken = await getAccessToken(context, credentials);
