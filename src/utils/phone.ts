@@ -1,23 +1,19 @@
-// Require Google's libphonenumber - same as Zapier implementation
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const phoneUtil = require('google-libphonenumber').PhoneNumberUtil.getInstance();
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const PNF = require('google-libphonenumber').PhoneNumberFormat;
+import { parsePhoneNumber } from './phoneValidation';
 
 export type NormalizeResult = { ok: true; value: string } | { ok: false; error: string };
 
 /**
- * Normalize a phone number to E.164 format using Google's libphonenumber
- * 
+ * Normalize a phone number to E.164 format using custom phone validation
+ *
  * This implementation matches the Zapier approach:
  * - International numbers (starting with +) work without country code
  * - Local/national numbers REQUIRE a country code to be specified
  * - Properly validates numbers according to each country's rules
- * 
+ *
  * @param input - Phone number in any format (with spaces, hyphens, brackets, etc.)
  * @param defaultCountry - Country code (e.g., 'AU', 'US', 'GB', 'NZ') - REQUIRED for local numbers
  * @returns Normalized phone number in E.164 format or error
- * 
+ *
  * @example
  * normalizePhoneNumberToE164('+61 437 536 808') // { ok: true, value: '+61437536808' }
  * normalizePhoneNumberToE164('0437 536 808', 'AU') // { ok: true, value: '+61437536808' }
@@ -49,10 +45,10 @@ export function normalizePhoneNumberToE164(
 
   try {
     // Parse the number with the country code
-    const number = phoneUtil.parseAndKeepRawInput(trimmed, defaultCountry || undefined);
+    const parsed = parsePhoneNumber(trimmed, defaultCountry);
 
     // Validate the parsed number (this prevents false positives like 0220450450 → +61220450450)
-    if (!phoneUtil.isValidNumber(number)) {
+    if (!parsed.isValid || !parsed.e164Format) {
       return {
         ok: false,
         error: defaultCountry
@@ -61,9 +57,8 @@ export function normalizePhoneNumberToE164(
       };
     }
 
-    // Format to E.164
-    const e164Number = phoneUtil.format(number, PNF.E164);
-    return { ok: true, value: e164Number };
+    // Return E.164 format
+    return { ok: true, value: parsed.e164Format };
 
   } catch (error) {
     return {

@@ -11,15 +11,11 @@ import { normalizePhoneNumberToE164 } from '../../utils/phone';
 import { SinchProvider } from './providers/SinchProvider';
 import { makeSinchRequest } from '../../utils/sinchHttp';
 import type { SinchCredentials, ListMessagesResponse, ListMessagesParams } from './types';
-import * as countries from 'i18n-iso-countries';
-import enLocale = require('i18n-iso-countries/langs/en.json');
-
-// Register English locale for country names
-countries.registerLocale(enLocale);
+import { getNames } from '../../utils/countryCodes';
 
 // Generate country list for dropdown (sorted alphabetically by name)
 function getCountryOptions() {
-  const countryList = countries.getNames('en', { select: 'official' });
+  const countryList = getNames();
   return Object.entries(countryList)
     .map(([code, name]) => ({
       name: `${name} (${code})`,
