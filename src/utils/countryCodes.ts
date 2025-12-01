@@ -1,6 +1,5 @@
 /**
  * Custom country code mappings for ISO 3166-1 standard
- * Replaces i18n-iso-countries dependency with self-contained implementation
  */
 
 /**
