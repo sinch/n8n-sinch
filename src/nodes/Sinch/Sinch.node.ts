@@ -307,7 +307,7 @@ export class Sinch implements INodeType {
                 acceptedTime: providerResult.acceptedTime,
                 to: toResult.value,
                 message,
-                provider: 'Sinch Build Conversations',
+                provider: 'Sinch Conversations',
                 channel: 'SMS',
                 raw: providerResult.raw,
               } as unknown as IDataObject,

@@ -11,7 +11,7 @@ export function clearTokenCache(): void {
 }
 
 /**
- * Get OAuth2.0 access token for Sinch Build Conversations API.
+ * Get OAuth2.0 access token for Sinch Conversations API.
  * Caches tokens until they expire (typically 1 hour).
  * Uses 55-minute cache (5-minute buffer before expiry).
  */
@@ -75,7 +75,7 @@ async function getAccessToken(
 }
 
 /**
- * Get the base URL for the Sinch Build Conversations API based on region.
+ * Get the base URL for the Sinch Conversations API based on region.
  */
 function getBaseUrl(region: SinchRegion): string {
   const baseUrls: Record<SinchRegion, string> = {
@@ -144,7 +144,7 @@ export async function makeSinchRequest<T = any>(
     const errorStatus = errorResponse?.error?.status;
 
     // Build detailed error message
-    let detailedMessage = `Sinch Build Conversations API error: ${errorMessage}`;
+    let detailedMessage = `Sinch Conversations API error: ${errorMessage}`;
     if (errorCode) {
       detailedMessage += ` (Status: ${errorCode})`;
     }

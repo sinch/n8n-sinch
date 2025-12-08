@@ -1,7 +1,7 @@
 {
   "name": "@sinch-engage/n8n-nodes-sinch",
   "version": "1.0.0-alpha-0",
-  "description": "n8n community node for Sinch Build Conversations API - send and manage omnichannel messages",
+  "description": "n8n community node for Sinch Conversations API - send and manage omnichannel messages",
   "keywords": [
     "n8n-community-node",
     "n8n-nodes",
@@ -13,7 +13,18 @@
     "omnichannel"
   ],
   "license": "MIT",
-  "author": "Sinch Engage",
+  "author": {
+    "name": "Sinch",
+    "email": "ecosystems@sinch.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sinch/n8n-sinch.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sinch/n8n-sinch/issues"
+  },
+  "homepage": "https://github.com/sinch/n8n-sinch#readme",
   "type": "commonjs",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
