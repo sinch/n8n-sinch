@@ -15,7 +15,7 @@ Community node for n8n to send and manage omnichannel messages via Sinch Convers
 
 ### Basic Information
 
-- **Display Name**: Sinch Build
+- **Display Name**: Sinch
 - **Name**: `Sinch`
 - **Group**: `transform`
 - **Inputs**: `main`
