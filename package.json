@@ -1,5 +1,5 @@
 {
-  "name": "@sinch-engage/n8n-nodes-sinch",
+  "name": "@sinch/n8n-nodes-sinch",
   "version": "1.0.0-alpha-0",
   "description": "n8n community node for Sinch Conversations API - send and manage omnichannel messages",
   "keywords": [
