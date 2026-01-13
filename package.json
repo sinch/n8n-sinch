@@ -33,7 +33,7 @@
       "dist/nodes/Sinch/Sinch.node.js"
     ],
     "credentials": [
-      "dist/credentials/SinchApi.credentials.js"
+      "dist/credentials/SinchApi.credential.js"
     ]
   },
   "directories": {
