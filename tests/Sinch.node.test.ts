@@ -13,10 +13,10 @@ vi.mock('n8n-workflow', async () => {
   } as any;
 });
 
-import { normalizePhoneNumberToE164 } from '../src/utils/phone';
-import { SinchProvider } from '../src/nodes/Sinch/providers/SinchProvider';
-import { makeSinchRequest, clearTokenCache } from '../src/utils/sinchHttp';
-import type { SinchCredentials } from '../src/nodes/Sinch/types';
+import { normalizePhoneNumberToE164 } from '../utils/phone';
+import { SinchProvider } from '../nodes/Sinch/providers/SinchProvider';
+import { makeSinchRequest, clearTokenCache } from '../utils/sinchHttp';
+import type { SinchCredentials } from '../nodes/Sinch/types';
 
 const helpers: any = {
   httpRequest: async (opts: any) => {
