@@ -33,7 +33,7 @@
       "dist/nodes/Sinch/Sinch.node.js"
     ],
     "credentials": [
-      "dist/credentials/SinchApi.credentials.js"
+      "dist/credentials/SinchApi.credential.js"
     ]
   },
   "directories": {
@@ -42,6 +42,10 @@
   },
   "files": [
     "dist/**/*",
+    "nodes/**/*",
+    "credentials/**/*",
+    "utils/**/*",
+    "index.ts",
     "examples/**/*",
     "README.md",
     "CHANGELOG.md",
@@ -49,18 +53,14 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && npm run copy:icons",
-    "copy:icons": "mkdir -p dist/nodes/Sinch && cp -f src/nodes/Sinch/*.png src/nodes/Sinch/*.svg dist/nodes/Sinch/ 2>/dev/null || true",
-    "lint": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0",
-    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" --max-warnings=0 --fix",
+    "copy:icons": "mkdir -p dist/nodes/Sinch && cp -f nodes/Sinch/*.png nodes/Sinch/*.svg dist/nodes/Sinch/ 2>/dev/null || true",
+    "lint": "eslint \"{nodes,credentials,utils}/**/*.{ts,tsx}\" index.ts --max-warnings=0",
+    "lint:fix": "eslint \"{nodes,credentials,utils}/**/*.{ts,tsx}\" index.ts --max-warnings=0 --fix",
     "test": "vitest run --coverage",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:no-coverage": "vitest run",
     "prepare": "npm run build"
-  },
-  "dependencies": {
-    "google-libphonenumber": "^3.2.43",
-    "i18n-iso-countries": "^7.14.0"
   },
   "devDependencies": {
     "@types/node": "^20.14.9",
