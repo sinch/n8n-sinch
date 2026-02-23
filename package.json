@@ -1,8 +1,9 @@
 {
   "name": "@sinch/n8n-nodes-sinch",
-  "version": "1.0.0-alpha-0.1",
+  "version": "1.0.0-alpha-0.3",
   "description": "n8n community node for Sinch Conversations API - send and manage omnichannel messages",
   "keywords": [
+    "n8n-community-node-package",
     "n8n-community-node",
     "n8n-nodes",
     "sinch",
@@ -86,8 +87,7 @@
     "qs": "^6.14.2"
   },
   "peerDependencies": {
-    "n8n-core": ">=1.0.0",
-    "n8n-workflow": ">=1.0.0"
+    "n8n-workflow": "*"
   },
   "engines": {
     "node": ">=20.19 <=24.x"

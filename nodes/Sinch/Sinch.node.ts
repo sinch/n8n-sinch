@@ -307,6 +307,7 @@ export class Sinch implements INodeType {
                 channel: 'SMS',
                 raw: providerResult.raw,
               } as unknown as IDataObject,
+              pairedItem: { item: itemIndex },
             });
           } catch (error) {
             const e = error as Error;
@@ -369,6 +370,7 @@ export class Sinch implements INodeType {
                   // Include raw response for debugging/advanced use
                   raw: msg,
                 } as unknown as IDataObject,
+                pairedItem: { item: itemIndex },
               });
             }
 
