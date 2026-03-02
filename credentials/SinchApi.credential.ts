@@ -14,6 +14,7 @@ export class SinchApi implements ICredentialType {
       displayName: 'Key ID',
       name: 'keyId',
       type: 'string',
+      typeOptions: { password: true },
       default: '',
       required: true,
       description: 'Your Sinch API Key ID from the dashboard',
