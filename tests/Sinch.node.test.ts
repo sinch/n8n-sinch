@@ -21,8 +21,8 @@ import type { SinchCredentials } from '../nodes/Sinch/types';
 const helpers: any = {
   httpRequest: async (opts: any) => {
     const fetch = await import('node-fetch');
-    const url = opts.url || opts.uri;
-    
+    const url = opts.url;
+
     // Build query string if qs is provided
     let fullUrl = url;
     if (opts.qs && Object.keys(opts.qs).length > 0) {
@@ -35,26 +35,21 @@ const helpers: any = {
       const queryString = queryParams.toString();
       fullUrl = queryString ? `${url}?${queryString}` : url;
     }
-    
-    const body = opts.form 
+
+    const body = opts.form
       ? new URLSearchParams(opts.form).toString()
-      : opts.json && opts.body
+      : typeof opts.body === 'object'
       ? JSON.stringify(opts.body)
       : opts.body;
-    
-    // Handle Basic Auth (used for OAuth2 token exchange with auth.sinch.com)
+
     const headers: any = { ...opts.headers };
-    if (opts.auth && opts.auth.username && opts.auth.password) {
-      const auth = Buffer.from(`${opts.auth.username}:${opts.auth.password}`).toString('base64');
-      headers['Authorization'] = `Basic ${auth}`;
-    }
-    
+
     const res = await (fetch.default as any)(fullUrl, {
       method: opts.method || 'GET',
       headers,
       body,
     });
-    
+
     const text = await res.text();
     try {
       const json = JSON.parse(text);
@@ -76,9 +71,6 @@ const helpers: any = {
       }
       return text;
     }
-  },
-  request: async (opts: any) => {
-    return helpers.httpRequest(opts);
   },
 };
 
