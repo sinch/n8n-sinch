@@ -1,4 +1,4 @@
-import type { IExecuteFunctions, IHookFunctions, ILoadOptionsFunctions } from 'n8n-workflow';
+import type { IExecuteFunctions, IHookFunctions, ILoadOptionsFunctions, IHttpRequestOptions } from 'n8n-workflow';
 import type { SinchCredentials, OAuth2TokenResponse, SinchRegion } from '../nodes/Sinch/types';
 import { SinchApiError } from './errors';
 
@@ -29,28 +29,24 @@ async function getAccessToken(
     return cached.token;
   }
 
-  // Fetch new token from Sinch auth server
-  const http = (context.helpers as any).httpRequest ?? (context.helpers as any).request;
-
   try {
     // Use form-encoded body as string (like the test script does)
     // This avoids conflicts between 'form' and 'json' properties in n8n's httpRequest
     const formBody = 'grant_type=client_credentials';
-    
-    const response = await http({
+    const authHeader = `Basic ${Buffer.from(`${credentials.keyId}:${credentials.keySecret}`).toString('base64')}`;
+
+    const requestOptions: IHttpRequestOptions = {
       method: 'POST',
       url: 'https://auth.sinch.com/oauth2/token',
       body: formBody,
-      auth: {
-        username: credentials.keyId,
-        password: credentials.keySecret,
-      },
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Content-Length': Buffer.byteLength(formBody).toString(),
+        'Authorization': authHeader,
       },
-      json: true, // Parse JSON response
-    }) as OAuth2TokenResponse;
+    };
+
+    const response = await context.helpers.httpRequest(requestOptions) as OAuth2TokenResponse;
 
     // Cache the token with 55-minute expiry (5-minute buffer before actual expiry)
     // expires_in is typically 3600 seconds (1 hour)
@@ -121,19 +117,17 @@ export async function makeSinchRequest<T = any>(
   }
 
   // Make request
-  const http = (context.helpers as any).httpRequest ?? (context.helpers as any).request;
+  const requestOptions: IHttpRequestOptions = {
+    method: options.method,
+    url,
+    body: options.body,
+    qs: options.qs,
+    headers,
+    timeout: 30000, // 30s timeout for Conversations API
+  };
 
   try {
-    const response = await http({
-      method: options.method,
-      url,
-      uri: url, // backward compat
-      json: true,
-      body: options.body,
-      qs: options.qs,
-      headers,
-      timeout: 30000, // 30s timeout for Conversations API
-    });
+    const response = await context.helpers.httpRequest(requestOptions);
 
     return response as T;
   } catch (error: any) {
