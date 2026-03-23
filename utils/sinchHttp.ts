@@ -19,8 +19,8 @@ async function getAccessToken(
   context: IHookFunctions | IExecuteFunctions | ILoadOptionsFunctions,
   credentials: SinchCredentials,
 ): Promise<string> {
-  // Create cache key
-  const cacheKey = `${credentials.keyId}:${credentials.keySecret}`;
+  // Create cache key (use only keyId to avoid holding secrets in memory as Map keys)
+  const cacheKey = credentials.keyId;
   const cached = tokenCache.get(cacheKey);
 
   // Return cached token if still valid (with 5-minute buffer)
