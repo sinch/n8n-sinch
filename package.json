@@ -45,10 +45,6 @@
   },
   "files": [
     "dist/**/*",
-    "nodes/**/*",
-    "credentials/**/*",
-    "utils/**/*",
-    "index.ts",
     "examples/**/*",
     "README.md",
     "CHANGELOG.md",
