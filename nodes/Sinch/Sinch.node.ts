@@ -176,6 +176,37 @@ export class Sinch implements INodeType {
         ],
       },
 
+      // LIST MESSAGES - RETURN ALL / LIMIT
+      {
+        displayName: 'Return All',
+        name: 'returnAll',
+        type: 'boolean',
+        default: false,
+        description: 'Whether to return all results or only up to a given limit',
+        displayOptions: {
+          show: {
+            resource: ['message'],
+            operation: ['list'],
+          },
+        },
+      },
+      {
+        displayName: 'Limit',
+        name: 'limit',
+        type: 'number',
+        default: 50,
+        description: 'Max number of results to return',
+        typeOptions: {
+          minValue: 1,
+        },
+        displayOptions: {
+          show: {
+            resource: ['message'],
+            operation: ['list'],
+            returnAll: [false],
+          },
+        },
+      },
 
       // LIST MESSAGES FIELDS
       {
@@ -224,7 +255,7 @@ export class Sinch implements INodeType {
             name: 'pageSize',
             type: 'number',
             default: 10,
-            description: 'Number of messages to return (max 1000)',
+            description: 'Number of messages per page (max 1000)',
             typeOptions: {
               minValue: 1,
               maxValue: 1000,
@@ -323,6 +354,8 @@ export class Sinch implements INodeType {
           }
         } else if (operation === 'list') {
           // LIST MESSAGES OPERATION
+          const returnAll = this.getNodeParameter('returnAll', itemIndex) as boolean;
+          const limit = returnAll ? 0 : (this.getNodeParameter('limit', itemIndex) as number);
           const filters = this.getNodeParameter('filters', itemIndex, {}) as {
             contactId?: string;
             conversationId?: string;
@@ -341,54 +374,81 @@ export class Sinch implements INodeType {
           if (filters.conversationId) queryParams.conversation_id = filters.conversationId;
           if (filters.startTime) queryParams.start_time = new Date(filters.startTime).toISOString();
           if (filters.endTime) queryParams.end_time = new Date(filters.endTime).toISOString();
-          if (filters.pageSize) queryParams.page_size = filters.pageSize;
           if (filters.channel) queryParams.channel = filters.channel as any;
 
+          // Set page size: use filter value, or limit (if not returnAll and <= 1000), or default 1000
+          if (filters.pageSize) {
+            queryParams.page_size = filters.pageSize;
+          } else if (!returnAll && limit > 0 && limit <= 1000) {
+            queryParams.page_size = limit;
+          } else {
+            queryParams.page_size = 1000;
+          }
+
           const endpoint = `/v1/projects/${credentials.projectId}/messages`;
+          const allMessages: INodeExecutionData[] = [];
+          let pageToken: string | undefined;
+          const maxPages = 1000; // Safeguard against infinite loops
+          let pageCount = 0;
 
           try {
-            const response = await makeSinchRequest<ListMessagesResponse>(this, {
-              method: 'GET',
-              endpoint,
-              qs: queryParams,
-            });
-
-            // Return each message as a separate item
-            for (const msg of response.messages) {
-              // Extract text from app_message (outbound) or contact_message (inbound)
-              const text = msg.direction === 'TO_CONTACT'
-                ? (msg.app_message?.text_message?.text || '')
-                : (msg.contact_message?.text_message?.text || '');
-
-              returnData.push({
-                json: {
-                  messageId: msg.id,
-                  direction: msg.direction,
-                  acceptTime: msg.accept_time,
-                  channel: msg.channel_identity.channel,
-                  identity: msg.channel_identity.identity,
-                  appId: msg.channel_identity.app_id,
-                  contactId: msg.contact_id,
-                  conversationId: msg.conversation_id,
-                  text,
-                  metadata: msg.metadata || '',
-                  // Include full message structure for advanced use cases
-                  appMessage: msg.app_message,
-                  contactMessage: msg.contact_message,
-                  // Include raw response for debugging/advanced use
-                  raw: msg,
-                } as unknown as IDataObject,
-                pairedItem: { item: itemIndex },
-              });
-            }
-
-            // Include pagination token if available
-            if (response.next_page_token) {
-              // Add pagination info to the last item
-              if (returnData.length > 0) {
-                (returnData[returnData.length - 1].json as any).nextPageToken = response.next_page_token;
+            do {
+              if (pageToken) {
+                queryParams.page_token = pageToken;
               }
+
+              const response = await makeSinchRequest<ListMessagesResponse>(this, {
+                method: 'GET',
+                endpoint,
+                qs: queryParams,
+              });
+
+              // Process each message
+              for (const msg of response.messages) {
+                const text = msg.direction === 'TO_CONTACT'
+                  ? (msg.app_message?.text_message?.text || '')
+                  : (msg.contact_message?.text_message?.text || '');
+
+                allMessages.push({
+                  json: {
+                    messageId: msg.id,
+                    direction: msg.direction,
+                    acceptTime: msg.accept_time,
+                    channel: msg.channel_identity.channel,
+                    identity: msg.channel_identity.identity,
+                    appId: msg.channel_identity.app_id,
+                    contactId: msg.contact_id,
+                    conversationId: msg.conversation_id,
+                    text,
+                    metadata: msg.metadata || '',
+                    appMessage: msg.app_message,
+                    contactMessage: msg.contact_message,
+                    raw: msg,
+                  } as unknown as IDataObject,
+                  pairedItem: { item: itemIndex },
+                });
+
+                // Stop early if we've reached the limit
+                if (!returnAll && allMessages.length >= limit) {
+                  break;
+                }
+              }
+
+              pageToken = response.next_page_token;
+              pageCount++;
+
+              // Stop if we've reached the limit or max pages
+              if (!returnAll && allMessages.length >= limit) {
+                break;
+              }
+            } while (pageToken && pageCount < maxPages);
+
+            // Trim to exact limit if needed
+            if (!returnAll && allMessages.length > limit) {
+              allMessages.length = limit;
             }
+
+            returnData.push(...allMessages);
           } catch (error) {
             throw new NodeApiError(this.getNode(), error as JsonObject, {
               message: (error as Error).message,
