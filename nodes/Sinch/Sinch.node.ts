@@ -253,11 +253,12 @@ export class Sinch implements INodeType {
     const credentials = (await this.getCredentials('SinchApi')) as SinchCredentials;
 
     for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
-      const resource = this.getNodeParameter('resource', itemIndex) as string;
-      const operation = this.getNodeParameter('operation', itemIndex) as string;
+      try {
+        const resource = this.getNodeParameter('resource', itemIndex) as string;
+        const operation = this.getNodeParameter('operation', itemIndex) as string;
 
-      if (resource === 'message') {
-        if (operation === 'send') {
+        if (resource === 'message') {
+          if (operation === 'send') {
           // SEND MESSAGE OPERATION
           const toRaw = this.getNodeParameter('to', itemIndex) as string;
           const defaultCountry = this.getNodeParameter('defaultCountry', itemIndex, '') as string || undefined;
@@ -395,6 +396,16 @@ export class Sinch implements INodeType {
             });
           }
         }
+        }
+      } catch (error) {
+        if (this.continueOnFail()) {
+          returnData.push({
+            json: { error: (error as Error).message },
+            pairedItem: { item: itemIndex },
+          });
+          continue;
+        }
+        throw error;
       }
     }
 
