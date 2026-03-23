@@ -187,13 +187,13 @@ Phone numbers must be in E.164 format:
           "callbackUrl": "https://webhook.site/unique-id"
         }
       },
-      "type": "@sinch-engage/n8n-nodes-sinch.Sinch",
+      "type": "@sinch/n8n-nodes-sinch.sinch",
       "typeVersion": 1,
       "position": [250, 300],
       "id": "abc123",
       "name": "Sinch Build Conversations",
       "credentials": {
-        "SinchApi": {
+        "sinchApi": {
           "id": "1",
           "name": "Sinch Conversations API"
         }
