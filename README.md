@@ -2,6 +2,27 @@
 
 Community node for n8n to send and manage omnichannel messages via Sinch Conversations API.
 
+## Installation
+
+### Using n8n Community Nodes
+
+1. Open your n8n instance
+2. Go to **Settings** > **Community Nodes**
+3. Enter `@sinch/n8n-nodes-sinch`
+4. Click **Install**
+
+### Manual Installation
+
+```bash
+cd ~/.n8n
+npm install @sinch/n8n-nodes-sinch
+```
+
+## Compatibility
+
+- **n8n**: 1.0.0 or later
+- **Node.js**: 20.19 or later (up to 24.x)
+
 ## ✨ Features
 
 - **Send SMS messages** via Sinch Conversations API
