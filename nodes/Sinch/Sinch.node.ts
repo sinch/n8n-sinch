@@ -3,7 +3,6 @@ import type {
   INodeExecutionData,
   INodeType,
   INodeTypeDescription,
-  NodeConnectionType,
   IDataObject,
   JsonObject,
 } from 'n8n-workflow';
@@ -28,7 +27,7 @@ function getCountryOptions() {
 export class Sinch implements INodeType {
   description: INodeTypeDescription = {
     displayName: 'Sinch',
-    name: 'Sinch',
+    name: 'sinch',
     icon: 'file:sinch-logo.png',
     group: ['transform'],
     version: 1,
@@ -37,10 +36,10 @@ export class Sinch implements INodeType {
     defaults: {
       name: 'Sinch',
     },
-    inputs: ['main' as NodeConnectionType],
-    outputs: ['main' as NodeConnectionType],
+    inputs: ['main'],
+    outputs: ['main'],
     credentials: [
-      { name: 'SinchApi', required: true },
+      { name: 'sinchApi', required: true },
     ],
     properties: [
       // RESOURCE SELECTION
@@ -109,7 +108,6 @@ export class Sinch implements INodeType {
         type: 'options',
         options: getCountryOptions(),
         default: '',
-        required: false,
         description: 'Select country if using local phone number format (without + prefix). Required when phone number does not include country code.',
         hint: 'Only needed if phone number is in local format (e.g., 4047691562). If using E.164 format (e.g., +14047691562), leave empty.',
         placeholder: 'Select a country...',
@@ -223,6 +221,18 @@ export class Sinch implements INodeType {
         },
         options: [
           {
+            displayName: 'Channel',
+            name: 'channel',
+            type: 'options',
+            options: [
+              { name: 'SMS', value: 'SMS' },
+              { name: 'WhatsApp', value: 'WHATSAPP' },
+              { name: 'RCS', value: 'RCS' },
+            ],
+            default: 'SMS',
+            description: 'Filter by channel',
+          },
+          {
             displayName: 'Contact ID',
             name: 'contactId',
             type: 'string',
@@ -235,13 +245,6 @@ export class Sinch implements INodeType {
             type: 'string',
             default: '',
             description: 'Filter by conversation ID',
-          },
-          {
-            displayName: 'Start Time',
-            name: 'startTime',
-            type: 'dateTime',
-            default: '',
-            description: 'Filter messages after this timestamp',
           },
           {
             displayName: 'End Time',
@@ -262,16 +265,11 @@ export class Sinch implements INodeType {
             },
           },
           {
-            displayName: 'Channel',
-            name: 'channel',
-            type: 'options',
-            options: [
-              { name: 'SMS', value: 'SMS' },
-              { name: 'WhatsApp', value: 'WHATSAPP' },
-              { name: 'RCS', value: 'RCS' },
-            ],
-            default: 'SMS',
-            description: 'Filter by channel',
+            displayName: 'Start Time',
+            name: 'startTime',
+            type: 'dateTime',
+            default: '',
+            description: 'Filter messages after this timestamp',
           },
         ],
       },
@@ -281,7 +279,7 @@ export class Sinch implements INodeType {
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
-    const credentials = (await this.getCredentials('SinchApi')) as SinchCredentials;
+    const credentials = (await this.getCredentials('sinchApi')) as SinchCredentials;
 
     for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
       try {

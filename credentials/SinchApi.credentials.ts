@@ -5,7 +5,7 @@ import type {
 } from 'n8n-workflow';
 
 export class SinchApi implements ICredentialType {
-  name = 'SinchApi';
+  name = 'sinchApi';
   displayName = 'Sinch API';
   documentationUrl = 'https://developers.sinch.com/docs/conversation/';
   

@@ -96,7 +96,7 @@ export async function makeSinchRequest<T = any>(
   },
 ): Promise<T> {
   // Get credentials
-  const credentials = (await context.getCredentials('SinchApi')) as SinchCredentials;
+  const credentials = (await context.getCredentials('sinchApi')) as SinchCredentials;
 
   // Get OAuth2.0 access token
   const accessToken = await getAccessToken(context, credentials);

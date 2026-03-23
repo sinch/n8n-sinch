@@ -35,7 +35,7 @@
       "dist/nodes/Sinch/Sinch.node.js"
     ],
     "credentials": [
-      "dist/credentials/SinchApi.credential.js"
+      "dist/credentials/SinchApi.credentials.js"
     ]
   },
   "directories": {
@@ -72,6 +72,7 @@
     "@vitest/coverage-v8": "^2.1.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-n8n-nodes-base": "^1.16.6",
     "n8n-core": "^2.8.0",
     "n8n-workflow": "^2.8.0",
     "nock": "^13.4.0",
