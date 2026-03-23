@@ -28,7 +28,7 @@ export class Sinch implements INodeType {
   description: INodeTypeDescription = {
     displayName: 'Sinch',
     name: 'sinch',
-    icon: 'file:sinch-logo.png',
+    icon: 'file:sinch.svg',
     group: ['transform'],
     version: 1,
     subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',

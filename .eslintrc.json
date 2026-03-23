@@ -19,7 +19,6 @@
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
     "no-console": "off",
-    "n8n-nodes-base/node-class-description-icon-not-svg": "off",
     "n8n-nodes-base/cred-class-field-documentation-url-miscased": "off"
   },
   "ignorePatterns": ["dist/**", "node_modules/**", "*.js"]
