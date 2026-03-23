@@ -5,8 +5,9 @@ import type {
   INodeTypeDescription,
   NodeConnectionType,
   IDataObject,
+  JsonObject,
 } from 'n8n-workflow';
-import { NodeApiError } from 'n8n-workflow';
+import { NodeApiError, NodeOperationError } from 'n8n-workflow';
 import { normalizePhoneNumberToE164 } from '../../utils/phone';
 import { SinchProvider } from './providers/SinchProvider';
 import { makeSinchRequest } from '../../utils/sinchHttp';
@@ -270,17 +271,21 @@ export class Sinch implements INodeType {
 
           // Validate message length
           if (message.length === 0 || message.length > 1600) {
-            throw new NodeApiError(this.getNode(), {
-              message: 'Message must be between 1 and 1600 characters',
-            });
+            throw new NodeOperationError(
+              this.getNode(),
+              'Message must be between 1 and 1600 characters',
+              { itemIndex },
+            );
           }
 
           // Normalize phone number to E.164
           const toResult = normalizePhoneNumberToE164(toRaw, defaultCountry);
           if (!toResult.ok) {
-            throw new NodeApiError(this.getNode(), {
-              message: `Invalid phone number: ${toResult.error}`,
-            });
+            throw new NodeOperationError(
+              this.getNode(),
+              `Invalid phone number: ${toResult.error}`,
+              { itemIndex },
+            );
           }
 
           const provider = new SinchProvider();
@@ -310,8 +315,10 @@ export class Sinch implements INodeType {
               pairedItem: { item: itemIndex },
             });
           } catch (error) {
-            const e = error as Error;
-            throw new NodeApiError(this.getNode(), { message: e.message });
+            throw new NodeApiError(this.getNode(), error as JsonObject, {
+              message: (error as Error).message,
+              itemIndex,
+            });
           }
         } else if (operation === 'list') {
           // LIST MESSAGES OPERATION
@@ -382,8 +389,10 @@ export class Sinch implements INodeType {
               }
             }
           } catch (error) {
-            const e = error as Error;
-            throw new NodeApiError(this.getNode(), { message: e.message });
+            throw new NodeApiError(this.getNode(), error as JsonObject, {
+              message: (error as Error).message,
+              itemIndex,
+            });
           }
         }
       }

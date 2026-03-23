@@ -4,12 +4,18 @@ import nock from 'nock';
 // Minimal stub of n8n-workflow to satisfy dynamic imports in execute tests
 vi.mock('n8n-workflow', async () => {
   class NodeApiError extends Error {
-    constructor(node: any, options: { message: string }) {
-      super(options.message);
+    constructor(_node: any, _errorResponse: any, options?: { message?: string }) {
+      super(options?.message || 'Unknown error');
+    }
+  }
+  class NodeOperationError extends Error {
+    constructor(_node: any, errorOrMessage: any, _options?: { itemIndex?: number }) {
+      super(typeof errorOrMessage === 'string' ? errorOrMessage : errorOrMessage?.message || 'Unknown error');
     }
   }
   return {
     NodeApiError,
+    NodeOperationError,
   } as any;
 });
 
