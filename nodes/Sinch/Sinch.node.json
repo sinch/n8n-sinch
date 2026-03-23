@@ -1,5 +1,5 @@
 {
-  "node": "n8n-nodes-base.Sinch",
+  "node": "@sinch/n8n-nodes-sinch.sinch",
   "nodeVersion": "1.0",
   "codexVersion": "1.0",
   "categories": ["Communication"],
