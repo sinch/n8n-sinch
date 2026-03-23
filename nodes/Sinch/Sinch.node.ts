@@ -29,7 +29,7 @@ export class Sinch implements INodeType {
     displayName: 'Sinch',
     name: 'sinch',
     icon: 'file:sinch.svg',
-    group: ['transform'],
+    group: ['output'],
     version: 1,
     subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
     description: 'Send and manage omnichannel messages via Sinch Conversations API',
