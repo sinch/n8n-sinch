@@ -23,22 +23,22 @@ npm install @sinch/n8n-nodes-sinch
 - **n8n**: 1.0.0 or later
 - **Node.js**: 20.19 or later (up to 24.x)
 
-## ✨ Features
+## Features
 
 - **Send SMS messages** via Sinch Conversations API
-- **List messages** with filtering and pagination
+- **Get Many messages** with filtering and pagination
 - **OAuth2.0 authentication** with automatic token management
 - **Multi-region support** (US, EU, BR)
 - **Phone number normalization** to E.164 format
 - **Robust error handling** and validation
 
-## 🎯 Node Configuration
+## Node Configuration
 
 ### Basic Information
 
 - **Display Name**: Sinch
-- **Name**: `Sinch`
-- **Group**: `transform`
+- **Name**: `sinch`
+- **Group**: `output`
 - **Inputs**: `main`
 - **Outputs**: `main`
 
@@ -52,22 +52,27 @@ Send SMS messages via Sinch Conversations API.
 - **To** (required) - Recipient phone number in E.164 format (e.g., +15551234567)
 - **Country** (optional) - Country for parsing local phone numbers without international prefix
 - **Message** (required, up to 1600 characters) - Message text to send
+- **SMS Sender** (optional) - Sender address (alphanumeric or phone number)
 - **Callback URL** (optional) - Webhook URL for delivery status updates
 - **Metadata** (optional) - Custom metadata to associate with the message (up to 1024 characters)
 
-#### List Messages
+#### Get Many Messages
 
-List and filter messages from conversations.
+Retrieve and filter messages from conversations.
+
+**Controls:**
+- **Return All** - Whether to return all results or only up to a given limit
+- **Limit** - Max number of results to return (default: 50)
 
 **Filters:**
 - **Contact ID** - Filter by contact ID
 - **Conversation ID** - Filter by conversation ID
 - **Start Time** - Filter messages after this timestamp
 - **End Time** - Filter messages before this timestamp
-- **Page Size** - Number of messages to return (max 1000, default: 10)
+- **Page Size** - Number of messages per page (max 1000, default: 10)
 - **Channel** - Filter by channel (SMS, WhatsApp, RCS)
 
-## 🔐 Credentials
+## Credentials
 
 ### Sinch Conversations API
 
@@ -84,13 +89,11 @@ List and filter messages from conversations.
 
 1. Create a Sinch account at https://dashboard.sinch.com
 2. Create a project
-3. Generate API keys in Settings → Access Keys
+3. Generate API keys in Settings > Access Keys
 4. Create a Conversation API app
 5. Note your Project ID and App ID
 
-## 📱 Sinch Conversations API Integration
-
-### API Endpoints
+## API Endpoints
 
 - **US**: `https://us.conversation.api.sinch.com`
 - **EU**: `https://eu.conversation.api.sinch.com`
@@ -133,7 +136,7 @@ List and filter messages from conversations.
 }
 ```
 
-### List Messages
+### Get Many Messages
 
 **Endpoint**: `GET /v1/projects/{projectId}/messages`
 
@@ -146,9 +149,7 @@ List and filter messages from conversations.
 - `page_size` (optional, max 1000)
 - `channel` (optional)
 
-## 🔄 Authentication
-
-### OAuth2.0
+## Authentication
 
 OAuth2.0 authentication is automatically handled:
 1. Tokens are fetched from `https://auth.sinch.com/oauth2/token`
@@ -156,7 +157,7 @@ OAuth2.0 authentication is automatically handled:
 3. Tokens are automatically refreshed when expired
 4. Bearer tokens are used in Authorization headers
 
-## 📞 Phone Number Format
+## Phone Number Format
 
 ### E.164 Format
 
@@ -167,15 +168,15 @@ Phone numbers must be in E.164 format:
 ### Supported Formats
 
 - `+15551234567` (international format)
-- `15551234567` with Country = US → `+15551234567`
-- `0437536808` with Country = AU → `+61437536808`
+- `15551234567` with Country = US -> `+15551234567`
+- `0437536808` with Country = AU -> `+61437536808`
 - `00` prefix is automatically converted to `+`
 
-## 📋 Example Workflow
+## Example Workflow
 
 ```json
 {
-  "name": "Send SMS via Sinch Build Conversations",
+  "name": "Send SMS via Sinch",
   "nodes": [
     {
       "parameters": {
@@ -191,7 +192,7 @@ Phone numbers must be in E.164 format:
       "typeVersion": 1,
       "position": [250, 300],
       "id": "abc123",
-      "name": "Sinch Build Conversations",
+      "name": "Sinch",
       "credentials": {
         "sinchApi": {
           "id": "1",
@@ -204,7 +205,7 @@ Phone numbers must be in E.164 format:
 }
 ```
 
-## 🛠️ Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -225,7 +226,7 @@ Phone numbers must be in E.164 format:
 | 429 | RESOURCE_EXHAUSTED | Rate limit exceeded | Implement backoff, check rate limits |
 | 500 | INTERNAL | Server error | Retry with exponential backoff |
 
-## 📚 Resources
+## Resources
 
 - **Sinch Conversations API Docs**: https://developers.sinch.com/docs/conversation/
 - **Send Message Endpoint**: https://developers.sinch.com/docs/conversation/api-reference/conversation/messages/messages_sendmessage
@@ -233,17 +234,10 @@ Phone numbers must be in E.164 format:
 - **OAuth2.0 Guide**: https://developers.sinch.com/docs/conversation/api-reference/conversation/#oauth20-authentication
 - **Sinch Dashboard**: https://dashboard.sinch.com
 
-## 📄 License
+## License
 
 MIT License
 
-## 🤝 Contributing
+## Contributing
 
-This is a Sinch internal project. For questions or contributions:
-1. Review documentation thoroughly
-2. Follow established patterns from n8n-engage
-3. Maintain code quality standards
-4. Write comprehensive tests
-5. Update documentation with changes
-
-
+Contributions, issues, and feature requests are welcome. Please open an issue on the [GitHub repository](https://github.com/sinch/n8n-sinch/issues) before submitting a pull request.
