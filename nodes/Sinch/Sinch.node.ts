@@ -77,10 +77,10 @@ export class Sinch implements INodeType {
             action: 'Send a message',
           },
           {
-            name: 'List',
-            value: 'list',
-            description: 'List messages from conversations',
-            action: 'List messages',
+            name: 'Get Many',
+            value: 'getMany',
+            description: 'Retrieve messages from conversations',
+            action: 'Get many messages',
           }
         ],
         default: 'send',
@@ -184,7 +184,7 @@ export class Sinch implements INodeType {
         displayOptions: {
           show: {
             resource: ['message'],
-            operation: ['list'],
+            operation: ['getMany'],
           },
         },
       },
@@ -200,7 +200,7 @@ export class Sinch implements INodeType {
         displayOptions: {
           show: {
             resource: ['message'],
-            operation: ['list'],
+            operation: ['getMany'],
             returnAll: [false],
           },
         },
@@ -216,7 +216,7 @@ export class Sinch implements INodeType {
         displayOptions: {
           show: {
             resource: ['message'],
-            operation: ['list'],
+            operation: ['getMany'],
           },
         },
         options: [
@@ -350,7 +350,7 @@ export class Sinch implements INodeType {
               itemIndex,
             });
           }
-        } else if (operation === 'list') {
+        } else if (operation === 'getMany') {
           // LIST MESSAGES OPERATION
           const returnAll = this.getNodeParameter('returnAll', itemIndex) as boolean;
           const limit = returnAll ? 0 : (this.getNodeParameter('limit', itemIndex) as number);
