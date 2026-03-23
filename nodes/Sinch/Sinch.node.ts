@@ -31,7 +31,7 @@ export class Sinch implements INodeType {
     icon: 'file:sinch.svg',
     group: ['output'],
     version: 1,
-    subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
+    subtitle: '={{$parameter["resource"] + ": " + $parameter["operation"]}}',
     description: 'Send and manage omnichannel messages via Sinch Conversations API',
     defaults: {
       name: 'Sinch',
@@ -94,6 +94,7 @@ export class Sinch implements INodeType {
         required: true,
         default: '',
         description: 'Recipient phone number. Accepts E.164 format (e.g., +15551234567) or local format (e.g., 5551234567) if Country is specified.',
+        placeholder: 'e.g. +15551234567',
         hint: 'E.164 format: +[country code][number] (e.g., +14047691562 for US). Local format: [number] (e.g., 4047691562) if Country is selected.',
         displayOptions: {
           show: {
@@ -126,6 +127,7 @@ export class Sinch implements INodeType {
         required: true,
         default: '',
         description: 'Message text to send (up to 1600 characters for SMS)',
+        placeholder: 'e.g. Hello from n8n!',
         hint: 'The message content that will be sent to the recipient. Maximum length: 1600 characters.',
         displayOptions: {
           show: {
@@ -162,6 +164,7 @@ export class Sinch implements INodeType {
             name: 'callbackUrl',
             type: 'string',
             default: '',
+            placeholder: 'e.g. https://example.com/webhook',
             description: 'Webhook URL for delivery status updates',
           },
           {
