@@ -31,6 +31,7 @@
   "types": "dist/index.d.ts",
   "n8n": {
     "n8nNodesApiVersion": 1,
+    "strict": true,
     "nodes": [
       "dist/nodes/Sinch/Sinch.node.js"
     ],
