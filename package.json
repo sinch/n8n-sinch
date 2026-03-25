@@ -30,11 +30,13 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "n8n": {
+    "n8nNodesApiVersion": 1,
+    "strict": true,
     "nodes": [
       "dist/nodes/Sinch/Sinch.node.js"
     ],
     "credentials": [
-      "dist/credentials/SinchApi.credential.js"
+      "dist/credentials/SinchApi.credentials.js"
     ]
   },
   "directories": {
@@ -43,10 +45,6 @@
   },
   "files": [
     "dist/**/*",
-    "nodes/**/*",
-    "credentials/**/*",
-    "utils/**/*",
-    "index.ts",
     "examples/**/*",
     "README.md",
     "CHANGELOG.md",
@@ -54,14 +52,15 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && npm run copy:icons",
-    "copy:icons": "mkdir -p dist/nodes/Sinch && cp -f nodes/Sinch/*.png nodes/Sinch/*.svg dist/nodes/Sinch/ 2>/dev/null || true",
+    "copy:icons": "mkdir -p dist/nodes/Sinch && cp -f nodes/Sinch/*.png nodes/Sinch/*.svg nodes/Sinch/*.node.json dist/nodes/Sinch/ 2>/dev/null || true",
     "lint": "eslint \"{nodes,credentials,utils}/**/*.{ts,tsx}\" index.ts --max-warnings=0",
     "lint:fix": "eslint \"{nodes,credentials,utils}/**/*.{ts,tsx}\" index.ts --max-warnings=0 --fix",
     "test": "vitest run --coverage",
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:no-coverage": "vitest run",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "prepublishOnly": "npm run build && npm run lint"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
@@ -71,6 +70,7 @@
     "@vitest/coverage-v8": "^2.1.0",
     "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-n8n-nodes-base": "^1.16.6",
     "n8n-core": "^2.8.0",
     "n8n-workflow": "^2.8.0",
     "nock": "^13.4.0",

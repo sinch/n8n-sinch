@@ -8,15 +8,18 @@
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
+    "plugin:n8n-nodes-base/nodes",
+    "plugin:n8n-nodes-base/credentials",
+    "plugin:n8n-nodes-base/community",
     "prettier"
   ],
-  "plugins": ["@typescript-eslint"],
+  "plugins": ["@typescript-eslint", "n8n-nodes-base"],
   "rules": {
     "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/explicit-module-boundary-types": "off",
     "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
-    "no-console": "off"
+    "no-console": "error",
+    "n8n-nodes-base/cred-class-field-documentation-url-miscased": "off"
   },
   "ignorePatterns": ["dist/**", "node_modules/**", "*.js"]
 }
-

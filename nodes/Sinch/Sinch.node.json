@@ -1,0 +1,13 @@
+{
+  "node": "@sinch/n8n-nodes-sinch.sinch",
+  "nodeVersion": "1.0",
+  "codexVersion": "1.0",
+  "categories": ["Communication"],
+  "resources": {
+    "primaryDocumentation": [
+      {
+        "url": "https://developers.sinch.com/docs/conversation/"
+      }
+    ]
+  }
+}

@@ -3,10 +3,10 @@ import type {
   INodeExecutionData,
   INodeType,
   INodeTypeDescription,
-  NodeConnectionType,
   IDataObject,
+  JsonObject,
 } from 'n8n-workflow';
-import { NodeApiError } from 'n8n-workflow';
+import { NodeApiError, NodeOperationError } from 'n8n-workflow';
 import { normalizePhoneNumberToE164 } from '../../utils/phone';
 import { SinchProvider } from './providers/SinchProvider';
 import { makeSinchRequest } from '../../utils/sinchHttp';
@@ -27,19 +27,19 @@ function getCountryOptions() {
 export class Sinch implements INodeType {
   description: INodeTypeDescription = {
     displayName: 'Sinch',
-    name: 'Sinch',
-    icon: 'file:sinch-logo.png',
-    group: ['transform'],
+    name: 'sinch',
+    icon: 'file:sinch.svg',
+    group: ['output'],
     version: 1,
-    subtitle: '={{$parameter["operation"] + ": " + $parameter["resource"]}}',
+    subtitle: '={{$parameter["resource"] + ": " + $parameter["operation"]}}',
     description: 'Send and manage omnichannel messages via Sinch Conversations API',
     defaults: {
       name: 'Sinch',
     },
-    inputs: ['main' as NodeConnectionType],
-    outputs: ['main' as NodeConnectionType],
+    inputs: ['main'],
+    outputs: ['main'],
     credentials: [
-      { name: 'SinchApi', required: true },
+      { name: 'sinchApi', required: true },
     ],
     properties: [
       // RESOURCE SELECTION
@@ -77,10 +77,10 @@ export class Sinch implements INodeType {
             action: 'Send a message',
           },
           {
-            name: 'List',
-            value: 'list',
-            description: 'List messages from conversations',
-            action: 'List messages',
+            name: 'Get Many',
+            value: 'getMany',
+            description: 'Retrieve messages from conversations',
+            action: 'Get many messages',
           }
         ],
         default: 'send',
@@ -94,6 +94,7 @@ export class Sinch implements INodeType {
         required: true,
         default: '',
         description: 'Recipient phone number. Accepts E.164 format (e.g., +15551234567) or local format (e.g., 5551234567) if Country is specified.',
+        placeholder: 'e.g. +15551234567',
         hint: 'E.164 format: +[country code][number] (e.g., +14047691562 for US). Local format: [number] (e.g., 4047691562) if Country is selected.',
         displayOptions: {
           show: {
@@ -108,7 +109,6 @@ export class Sinch implements INodeType {
         type: 'options',
         options: getCountryOptions(),
         default: '',
-        required: false,
         description: 'Select country if using local phone number format (without + prefix). Required when phone number does not include country code.',
         hint: 'Only needed if phone number is in local format (e.g., 4047691562). If using E.164 format (e.g., +14047691562), leave empty.',
         placeholder: 'Select a country...',
@@ -127,6 +127,7 @@ export class Sinch implements INodeType {
         required: true,
         default: '',
         description: 'Message text to send (up to 1600 characters for SMS)',
+        placeholder: 'e.g. Hello from n8n!',
         hint: 'The message content that will be sent to the recipient. Maximum length: 1600 characters.',
         displayOptions: {
           show: {
@@ -163,6 +164,7 @@ export class Sinch implements INodeType {
             name: 'callbackUrl',
             type: 'string',
             default: '',
+            placeholder: 'e.g. https://example.com/webhook',
             description: 'Webhook URL for delivery status updates',
           },
           {
@@ -175,6 +177,37 @@ export class Sinch implements INodeType {
         ],
       },
 
+      // LIST MESSAGES - RETURN ALL / LIMIT
+      {
+        displayName: 'Return All',
+        name: 'returnAll',
+        type: 'boolean',
+        default: false,
+        description: 'Whether to return all results or only up to a given limit',
+        displayOptions: {
+          show: {
+            resource: ['message'],
+            operation: ['getMany'],
+          },
+        },
+      },
+      {
+        displayName: 'Limit',
+        name: 'limit',
+        type: 'number',
+        default: 50,
+        description: 'Max number of results to return',
+        typeOptions: {
+          minValue: 1,
+        },
+        displayOptions: {
+          show: {
+            resource: ['message'],
+            operation: ['getMany'],
+            returnAll: [false],
+          },
+        },
+      },
 
       // LIST MESSAGES FIELDS
       {
@@ -186,10 +219,22 @@ export class Sinch implements INodeType {
         displayOptions: {
           show: {
             resource: ['message'],
-            operation: ['list'],
+            operation: ['getMany'],
           },
         },
         options: [
+          {
+            displayName: 'Channel',
+            name: 'channel',
+            type: 'options',
+            options: [
+              { name: 'SMS', value: 'SMS' },
+              { name: 'WhatsApp', value: 'WHATSAPP' },
+              { name: 'RCS', value: 'RCS' },
+            ],
+            default: 'SMS',
+            description: 'Filter by channel',
+          },
           {
             displayName: 'Contact ID',
             name: 'contactId',
@@ -205,13 +250,6 @@ export class Sinch implements INodeType {
             description: 'Filter by conversation ID',
           },
           {
-            displayName: 'Start Time',
-            name: 'startTime',
-            type: 'dateTime',
-            default: '',
-            description: 'Filter messages after this timestamp',
-          },
-          {
             displayName: 'End Time',
             name: 'endTime',
             type: 'dateTime',
@@ -223,23 +261,18 @@ export class Sinch implements INodeType {
             name: 'pageSize',
             type: 'number',
             default: 10,
-            description: 'Number of messages to return (max 1000)',
+            description: 'Number of messages per page (max 1000)',
             typeOptions: {
               minValue: 1,
               maxValue: 1000,
             },
           },
           {
-            displayName: 'Channel',
-            name: 'channel',
-            type: 'options',
-            options: [
-              { name: 'SMS', value: 'SMS' },
-              { name: 'WhatsApp', value: 'WHATSAPP' },
-              { name: 'RCS', value: 'RCS' },
-            ],
-            default: 'SMS',
-            description: 'Filter by channel',
+            displayName: 'Start Time',
+            name: 'startTime',
+            type: 'dateTime',
+            default: '',
+            description: 'Filter messages after this timestamp',
           },
         ],
       },
@@ -249,14 +282,15 @@ export class Sinch implements INodeType {
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
-    const credentials = (await this.getCredentials('SinchApi')) as SinchCredentials;
+    const credentials = (await this.getCredentials('sinchApi')) as SinchCredentials;
 
     for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
-      const resource = this.getNodeParameter('resource', itemIndex) as string;
-      const operation = this.getNodeParameter('operation', itemIndex) as string;
+      try {
+        const resource = this.getNodeParameter('resource', itemIndex) as string;
+        const operation = this.getNodeParameter('operation', itemIndex) as string;
 
-      if (resource === 'message') {
-        if (operation === 'send') {
+        if (resource === 'message') {
+          if (operation === 'send') {
           // SEND MESSAGE OPERATION
           const toRaw = this.getNodeParameter('to', itemIndex) as string;
           const defaultCountry = this.getNodeParameter('defaultCountry', itemIndex, '') as string || undefined;
@@ -270,17 +304,21 @@ export class Sinch implements INodeType {
 
           // Validate message length
           if (message.length === 0 || message.length > 1600) {
-            throw new NodeApiError(this.getNode(), {
-              message: 'Message must be between 1 and 1600 characters',
-            });
+            throw new NodeOperationError(
+              this.getNode(),
+              'Message must be between 1 and 1600 characters',
+              { itemIndex },
+            );
           }
 
           // Normalize phone number to E.164
           const toResult = normalizePhoneNumberToE164(toRaw, defaultCountry);
           if (!toResult.ok) {
-            throw new NodeApiError(this.getNode(), {
-              message: `Invalid phone number: ${toResult.error}`,
-            });
+            throw new NodeOperationError(
+              this.getNode(),
+              `Invalid phone number: ${toResult.error}`,
+              { itemIndex },
+            );
           }
 
           const provider = new SinchProvider();
@@ -310,11 +348,15 @@ export class Sinch implements INodeType {
               pairedItem: { item: itemIndex },
             });
           } catch (error) {
-            const e = error as Error;
-            throw new NodeApiError(this.getNode(), { message: e.message });
+            throw new NodeApiError(this.getNode(), error as JsonObject, {
+              message: (error as Error).message,
+              itemIndex,
+            });
           }
-        } else if (operation === 'list') {
+        } else if (operation === 'getMany') {
           // LIST MESSAGES OPERATION
+          const returnAll = this.getNodeParameter('returnAll', itemIndex) as boolean;
+          const limit = returnAll ? 0 : (this.getNodeParameter('limit', itemIndex) as number);
           const filters = this.getNodeParameter('filters', itemIndex, {}) as {
             contactId?: string;
             conversationId?: string;
@@ -333,59 +375,98 @@ export class Sinch implements INodeType {
           if (filters.conversationId) queryParams.conversation_id = filters.conversationId;
           if (filters.startTime) queryParams.start_time = new Date(filters.startTime).toISOString();
           if (filters.endTime) queryParams.end_time = new Date(filters.endTime).toISOString();
-          if (filters.pageSize) queryParams.page_size = filters.pageSize;
           if (filters.channel) queryParams.channel = filters.channel as any;
 
+          // Set page size: use filter value, or limit (if not returnAll and <= 1000), or default 1000
+          if (filters.pageSize) {
+            queryParams.page_size = filters.pageSize;
+          } else if (!returnAll && limit > 0 && limit <= 1000) {
+            queryParams.page_size = limit;
+          } else {
+            queryParams.page_size = 1000;
+          }
+
           const endpoint = `/v1/projects/${credentials.projectId}/messages`;
+          const allMessages: INodeExecutionData[] = [];
+          let pageToken: string | undefined;
+          const maxPages = 1000; // Safeguard against infinite loops
+          let pageCount = 0;
 
           try {
-            const response = await makeSinchRequest<ListMessagesResponse>(this, {
-              method: 'GET',
-              endpoint,
-              qs: queryParams,
-            });
-
-            // Return each message as a separate item
-            for (const msg of response.messages) {
-              // Extract text from app_message (outbound) or contact_message (inbound)
-              const text = msg.direction === 'TO_CONTACT'
-                ? (msg.app_message?.text_message?.text || '')
-                : (msg.contact_message?.text_message?.text || '');
-
-              returnData.push({
-                json: {
-                  messageId: msg.id,
-                  direction: msg.direction,
-                  acceptTime: msg.accept_time,
-                  channel: msg.channel_identity.channel,
-                  identity: msg.channel_identity.identity,
-                  appId: msg.channel_identity.app_id,
-                  contactId: msg.contact_id,
-                  conversationId: msg.conversation_id,
-                  text,
-                  metadata: msg.metadata || '',
-                  // Include full message structure for advanced use cases
-                  appMessage: msg.app_message,
-                  contactMessage: msg.contact_message,
-                  // Include raw response for debugging/advanced use
-                  raw: msg,
-                } as unknown as IDataObject,
-                pairedItem: { item: itemIndex },
-              });
-            }
-
-            // Include pagination token if available
-            if (response.next_page_token) {
-              // Add pagination info to the last item
-              if (returnData.length > 0) {
-                (returnData[returnData.length - 1].json as any).nextPageToken = response.next_page_token;
+            do {
+              if (pageToken) {
+                queryParams.page_token = pageToken;
               }
+
+              const response = await makeSinchRequest<ListMessagesResponse>(this, {
+                method: 'GET',
+                endpoint,
+                qs: queryParams,
+              });
+
+              // Process each message
+              for (const msg of response.messages) {
+                const text = msg.direction === 'TO_CONTACT'
+                  ? (msg.app_message?.text_message?.text || '')
+                  : (msg.contact_message?.text_message?.text || '');
+
+                allMessages.push({
+                  json: {
+                    messageId: msg.id,
+                    direction: msg.direction,
+                    acceptTime: msg.accept_time,
+                    channel: msg.channel_identity.channel,
+                    identity: msg.channel_identity.identity,
+                    appId: msg.channel_identity.app_id,
+                    contactId: msg.contact_id,
+                    conversationId: msg.conversation_id,
+                    text,
+                    metadata: msg.metadata || '',
+                    appMessage: msg.app_message,
+                    contactMessage: msg.contact_message,
+                    raw: msg,
+                  } as unknown as IDataObject,
+                  pairedItem: { item: itemIndex },
+                });
+
+                // Stop early if we've reached the limit
+                if (!returnAll && allMessages.length >= limit) {
+                  break;
+                }
+              }
+
+              pageToken = response.next_page_token;
+              pageCount++;
+
+              // Stop if we've reached the limit or max pages
+              if (!returnAll && allMessages.length >= limit) {
+                break;
+              }
+            } while (pageToken && pageCount < maxPages);
+
+            // Trim to exact limit if needed
+            if (!returnAll && allMessages.length > limit) {
+              allMessages.length = limit;
             }
+
+            returnData.push(...allMessages);
           } catch (error) {
-            const e = error as Error;
-            throw new NodeApiError(this.getNode(), { message: e.message });
+            throw new NodeApiError(this.getNode(), error as JsonObject, {
+              message: (error as Error).message,
+              itemIndex,
+            });
           }
         }
+        }
+      } catch (error) {
+        if (this.continueOnFail()) {
+          returnData.push({
+            json: { error: (error as Error).message },
+            pairedItem: { item: itemIndex },
+          });
+          continue;
+        }
+        throw error;
       }
     }
 
