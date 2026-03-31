@@ -52,7 +52,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json && npm run copy:icons",
-    "copy:icons": "mkdir -p dist/nodes/Sinch && cp -f nodes/Sinch/*.png nodes/Sinch/*.svg nodes/Sinch/*.node.json dist/nodes/Sinch/ 2>/dev/null || true",
+    "copy:icons": "mkdir -p dist/nodes/Sinch dist/credentials && cp -f nodes/Sinch/*.png nodes/Sinch/*.svg nodes/Sinch/*.node.json dist/nodes/Sinch/ 2>/dev/null || true && cp -f credentials/*.svg dist/credentials/ 2>/dev/null || true",
     "lint": "eslint \"{nodes,credentials,utils}/**/*.{ts,tsx}\" index.ts --max-warnings=0",
     "lint:fix": "eslint \"{nodes,credentials,utils}/**/*.{ts,tsx}\" index.ts --max-warnings=0 --fix",
     "test": "vitest run --coverage",

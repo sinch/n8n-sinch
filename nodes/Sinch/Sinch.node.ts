@@ -10,7 +10,7 @@ import { NodeApiError, NodeOperationError } from 'n8n-workflow';
 import { normalizePhoneNumberToE164 } from '../../utils/phone';
 import { SinchProvider } from './providers/SinchProvider';
 import { makeSinchRequest } from '../../utils/sinchHttp';
-import type { SinchCredentials, ListMessagesResponse, ListMessagesParams } from './types';
+import type { SinchCredentials, SinchChannel, ListMessagesResponse, ListMessagesParams } from './types';
 import { getNames } from '../../utils/countryCodes';
 
 // Generate country list for dropdown (sorted alphabetically by name)
@@ -283,6 +283,7 @@ export class Sinch implements INodeType {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
     const credentials = (await this.getCredentials('sinchApi')) as SinchCredentials;
+    const provider = new SinchProvider();
 
     for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
       try {
@@ -320,8 +321,6 @@ export class Sinch implements INodeType {
               { itemIndex },
             );
           }
-
-          const provider = new SinchProvider();
 
           try {
             const providerResult = await provider.send({
@@ -375,7 +374,7 @@ export class Sinch implements INodeType {
           if (filters.conversationId) queryParams.conversation_id = filters.conversationId;
           if (filters.startTime) queryParams.start_time = new Date(filters.startTime).toISOString();
           if (filters.endTime) queryParams.end_time = new Date(filters.endTime).toISOString();
-          if (filters.channel) queryParams.channel = filters.channel as any;
+          if (filters.channel) queryParams.channel = filters.channel as SinchChannel;
 
           // Set page size: use filter value, or limit (if not returnAll and <= 1000), or default 1000
           if (filters.pageSize) {
