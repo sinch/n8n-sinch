@@ -1,3 +1,4 @@
+import type { IExecuteFunctions } from 'n8n-workflow';
 import { ProviderHttpError } from '../../../utils/errors';
 import { makeSinchRequest } from '../../../utils/sinchHttp';
 import type {
@@ -51,8 +52,7 @@ export class SinchProvider {
     const endpoint = `/v1/projects/${credentials.projectId}/messages:send`;
 
     try {
-      // Cast helpers to provide context for shared utility
-      const context = { helpers, getCredentials: async () => credentials } as any;
+      const context = { helpers, getCredentials: async () => credentials } as unknown as IExecuteFunctions;
 
       const response = await makeSinchRequest<SendMessageResponse>(context, {
         method: 'POST',

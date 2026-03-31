@@ -54,6 +54,7 @@ export interface SendMessageResponse {
 
 // List messages query parameters
 export interface ListMessagesParams {
+  [key: string]: string | number | boolean | undefined;
   app_id?: string;
   contact_id?: string;
   conversation_id?: string;

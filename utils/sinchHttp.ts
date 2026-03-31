@@ -60,12 +60,13 @@ async function getAccessToken(
     });
 
     return response.access_token;
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const err = error as { message?: string; statusCode?: number; response?: unknown };
     throw new SinchApiError(
-      `Failed to obtain OAuth2 access token: ${error.message}`,
-      error.statusCode,
+      `Failed to obtain OAuth2 access token: ${err.message ?? 'Unknown error'}`,
+      err.statusCode,
       'AUTH_FAILED',
-      error.response,
+      err.response,
     );
   }
 }
@@ -86,13 +87,13 @@ function getBaseUrl(region: SinchRegion): string {
  * Make an authenticated request to the Sinch API.
  * Handles OAuth2.0 token management and regional endpoints.
  */
-export async function makeSinchRequest<T = any>(
+export async function makeSinchRequest<T = unknown>(
   context: IHookFunctions | IExecuteFunctions | ILoadOptionsFunctions,
   options: {
     method: 'GET' | 'POST' | 'DELETE' | 'PUT' | 'PATCH';
     endpoint: string; // e.g., '/v1/projects/{project_id}/messages:send'
-    body?: any;
-    qs?: Record<string, any>;
+    body?: IHttpRequestOptions['body'];
+    qs?: IHttpRequestOptions['qs'];
   },
 ): Promise<T> {
   // Get credentials
@@ -130,12 +131,14 @@ export async function makeSinchRequest<T = any>(
     const response = await context.helpers.httpRequest(requestOptions);
 
     return response as T;
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Parse Sinch API error format
-    const errorResponse = error.response?.body || error.error || error;
-    const errorCode = errorResponse?.error?.code || error.statusCode;
-    const errorMessage = errorResponse?.error?.message || error.message || 'Unknown error';
-    const errorStatus = errorResponse?.error?.status;
+    const err = error as Record<string, unknown>;
+    const resp = (err.response as Record<string, unknown>)?.body ?? err.error ?? err;
+    const respError = (resp as Record<string, unknown>)?.error as Record<string, unknown> | undefined;
+    const errorCode = String(respError?.code ?? err.statusCode ?? '');
+    const errorMessage = String(respError?.message ?? err.message ?? 'Unknown error');
+    const errorStatus = respError?.status ? String(respError.status) : undefined;
 
     // Build detailed error message
     let detailedMessage = `Sinch Conversations API error: ${errorMessage}`;
@@ -148,9 +151,9 @@ export async function makeSinchRequest<T = any>(
 
     throw new SinchApiError(
       detailedMessage,
-      errorCode,
+      errorCode ? Number(errorCode) || undefined : undefined,
       errorStatus,
-      errorResponse,
+      resp,
     );
   }
 }
