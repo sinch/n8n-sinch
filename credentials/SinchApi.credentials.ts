@@ -8,6 +8,7 @@ export class SinchApi implements ICredentialType {
   name = 'sinchApi';
   displayName = 'Sinch API';
   documentationUrl = 'https://developers.sinch.com/docs/conversation/';
+  icon = 'file:sinch.svg' as const;
   
   properties: INodeProperties[] = [
     {
