@@ -2,7 +2,7 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
-#### v1.0.0-alpha-0.6
+#### v1.0.0-alpha-0.7
 
 > 2 April 2026
 
@@ -10,7 +10,7 @@ All notable changes to this project will be documented in this file. Dates are d
 - Promote `@typescript-eslint/no-explicit-any` from warn to error
 - Remove unused sinch-logo.png (SVG is used)
 - Rework GitHub Actions publish workflow: trigger on main push via GitLab mirror, auto-detect version bumps, auto-create GitHub Release and git tag
-- Switch to npm Trusted Publishing (OIDC) — no stored credentials needed
+- Use granular access token for npm publish with provenance
 - Regenerate package-lock.json with npm 11 (lockfileVersion 3) to match CI
 
 #### v1.0.0-alpha-0.5
