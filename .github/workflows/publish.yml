@@ -54,9 +54,11 @@ jobs:
         if: steps.version.outputs.changed == 'true'
         run: npm test
 
-      - name: Publish to npm (Trusted Publishing via OIDC)
+      - name: Publish to npm
         if: steps.version.outputs.changed == 'true'
         run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub Release and tag
         if: steps.version.outputs.changed == 'true'
