@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### v1.0.0-alpha-0.6
+
+> 2 April 2026
+
+- Remove `overrides` field from package.json (not permitted for verified nodes)
+- Promote `@typescript-eslint/no-explicit-any` from warn to error
+- Remove unused sinch-logo.png (SVG is used)
+- Rework GitHub Actions publish workflow: trigger on main push via GitLab mirror, auto-detect version bumps, auto-create GitHub Release and git tag
+- Switch to npm Trusted Publishing (OIDC) — no stored credentials needed
+- Regenerate package-lock.json with npm 11 (lockfileVersion 3) to match CI
+
+#### v1.0.0-alpha-0.5
+
+> 31 March 2026
+
+- Add icon to credential class for proper display in n8n UI
+- Fix build to copy credential icon SVG to dist output
+- Move SinchProvider instantiation outside item loop
+- Replace all `any` types with proper typed alternatives
+- Enable `@typescript-eslint/no-explicit-any` as warning
+
 #### v1.0.0-alpha-0.4
 
 > 23 March 2026
