@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### v1.0.0-alpha.8
+
+> 7 April 2026
+
+- Use `NodeConnectionTypes.Main` constant for inputs/outputs instead of string literals (n8n reviewer requirement)
+- Add `subcategories` and `alias` to codex metadata for improved node panel discoverability
+- Switch to standard semver prerelease format (alpha.N instead of alpha-0.N)
+
 #### v1.0.0-alpha-0.7
 
 > 2 April 2026

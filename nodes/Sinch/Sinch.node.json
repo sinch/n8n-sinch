@@ -3,6 +3,10 @@
   "nodeVersion": "1.0",
   "codexVersion": "1.0",
   "categories": ["Communication"],
+  "subcategories": {
+    "Communication": ["SMS"]
+  },
+  "alias": ["SMS", "WhatsApp", "Conversations", "Messaging"],
   "resources": {
     "primaryDocumentation": [
       {

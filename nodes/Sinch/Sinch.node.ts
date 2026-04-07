@@ -6,7 +6,7 @@ import type {
   IDataObject,
   JsonObject,
 } from 'n8n-workflow';
-import { NodeApiError, NodeOperationError } from 'n8n-workflow';
+import { NodeApiError, NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 import { normalizePhoneNumberToE164 } from '../../utils/phone';
 import { SinchProvider } from './providers/SinchProvider';
 import { makeSinchRequest } from '../../utils/sinchHttp';
@@ -36,8 +36,10 @@ export class Sinch implements INodeType {
     defaults: {
       name: 'Sinch',
     },
-    inputs: ['main'],
-    outputs: ['main'],
+    // eslint-disable-next-line n8n-nodes-base/node-class-description-inputs-wrong-regular-node
+    inputs: [NodeConnectionTypes.Main],
+    // eslint-disable-next-line n8n-nodes-base/node-class-description-outputs-wrong
+    outputs: [NodeConnectionTypes.Main],
     credentials: [
       { name: 'sinchApi', required: true },
     ],
