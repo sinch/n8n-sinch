@@ -1,9 +1,9 @@
 {
-  "node": "@sinch/n8n-nodes-sinch.sinch",
+  "node": "@sinch/n8n-nodes-sinch.sinchTrigger",
   "nodeVersion": "1.0",
   "codexVersion": "1.0",
   "categories": ["Communication"],
-  "alias": ["SMS", "WhatsApp", "Conversations", "Messaging"],
+  "alias": ["SMS", "WhatsApp", "Conversations", "Messaging", "Webhook", "Delivery"],
   "resources": {
     "primaryDocumentation": [
       {

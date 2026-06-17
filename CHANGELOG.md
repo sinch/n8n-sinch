@@ -2,6 +2,45 @@
 
 All notable changes to this project will be documented in this file. Dates are displayed in UTC.
 
+#### v1.1.0
+
+> 16 June 2026
+
+- First stable release (graduates from `1.0.0-alpha.9` prerelease)
+- Route Conversation API actions through the Econexus Sinch Build proxy (`au`/`eu.app.api.sinch.com`)
+- Add OAuth Bearer requests with Sinch Build proxy headers (`X-AUTH-SOURCE`, `X-SINCH-APP-ID`, etc.)
+- Update credential test to validate against the Econexus apps endpoint
+- Add **Sinch Trigger** node with Message Delivered webhook via Econexus ISS subscriptions
+- Improve Sinch Trigger error handling with actionable `NodeApiError` and `NodeOperationError` messages
+- Add subtitle to Sinch Trigger node description
+- Add Send WhatsApp Template Message operation via Sinch Conversation API
+- List approved WhatsApp templates from Sinch Provisioning API (loadOptions)
+- Dynamically show template body variable fields ({{1}}–{{20}}) based on selected template
+- Add `makeProvisioningRequest` helper and `whatsappTemplate` parsing utilities
+- Add unit tests for template variable parsing and WhatsApp send flow
+- Remove disallowed `prepare` lifecycle script from package.json (community scanner)
+- Remove undocumented `subcategories` from codex metadata
+- Fix n8n ESLint copy rules for WhatsApp parameters
+
+#### v1.0.0-alpha.9
+
+> 15 June 2026
+
+- Route Conversation API actions through the Econexus Sinch Build proxy (`au`/`eu.app.api.sinch.com`)
+- Add OAuth Bearer requests with Sinch Build proxy headers (`X-AUTH-SOURCE`, `X-SINCH-APP-ID`, etc.)
+- Update credential test to validate against the Econexus apps endpoint
+- Add **Sinch Trigger** node with Message Delivered webhook via Econexus ISS subscriptions
+- Improve Sinch Trigger error handling with actionable `NodeApiError` and `NodeOperationError` messages
+- Add subtitle to Sinch Trigger node description
+- Add Send WhatsApp Template Message operation via Sinch Conversation API
+- List approved WhatsApp templates from Sinch Provisioning API (loadOptions)
+- Dynamically show template body variable fields ({{1}}–{{20}}) based on selected template
+- Add `makeProvisioningRequest` helper and `whatsappTemplate` parsing utilities
+- Add unit tests for template variable parsing and WhatsApp send flow
+- Remove disallowed `prepare` lifecycle script from package.json (community scanner)
+- Remove undocumented `subcategories` from codex metadata
+- Fix n8n ESLint copy rules for WhatsApp parameters
+
 #### v1.0.0-alpha.8
 
 > 7 April 2026

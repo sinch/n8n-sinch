@@ -3,13 +3,14 @@ import type {
   ICredentialType,
   INodeProperties,
 } from 'n8n-workflow';
+import { version as connectorVersion } from '../package.json';
 
 export class SinchApi implements ICredentialType {
   name = 'sinchApi';
   displayName = 'Sinch API';
   documentationUrl = 'https://developers.sinch.com/docs/conversation/';
   icon = 'file:sinch.svg' as const;
-  
+
   properties: INodeProperties[] = [
     {
       displayName: 'Key ID',
@@ -29,7 +30,6 @@ export class SinchApi implements ICredentialType {
       required: true,
       description: 'Your Sinch API Key Secret from the dashboard',
     },
-    // Region Selection
     {
       displayName: 'Region',
       name: 'region',
@@ -43,7 +43,6 @@ export class SinchApi implements ICredentialType {
       required: true,
       description: 'Region where your Conversation API app was created',
     },
-    // Project ID
     {
       displayName: 'Project ID',
       name: 'projectId',
@@ -53,7 +52,6 @@ export class SinchApi implements ICredentialType {
       description: 'Your Sinch Project ID from the dashboard',
       placeholder: 'e.g., 00000000-0000-0000-0000-000000000000',
     },
-    // App ID (used in messages)
     {
       displayName: 'App ID',
       name: 'appId',
@@ -65,21 +63,26 @@ export class SinchApi implements ICredentialType {
     },
   ];
 
-  // Test the credentials by attempting to obtain an OAuth2.0 access token
-  // This validates that the Key ID and Key Secret are correct
+  // Validate credentials via the Econexus Sinch Build proxy
   test: ICredentialTestRequest = {
     request: {
-      method: 'POST',
-      url: 'https://auth.sinch.com/oauth2/token',
-      body: 'grant_type=client_credentials',
+      method: 'GET',
+      url: '={{ $credentials.region === "eu" ? "https://eu.app.api.sinch.com" : "https://au.app.api.sinch.com" }}/v1/econexus/sinch-build/v1/projects/{{ $credentials.projectId }}/apps',
+      qs: {
+        isTestingAuth: 'true',
+      },
       auth: {
         username: '={{$credentials.keyId}}',
         password: '={{$credentials.keySecret}}',
       },
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        'Accept': 'application/json',
+        'X-AUTH-SOURCE': 'SINCH-BUILD',
+        'X-SINCH-APP-ID': '={{$credentials.appId}}',
+        'X-SINCH-PROJECT-ID': '={{$credentials.projectId}}',
+        'X-CLIENT-SOURCE': 'n8n-sinch-build',
+        'X-CLIENT-SOURCE-VERSION': connectorVersion,
       },
     },
   };
 }
-

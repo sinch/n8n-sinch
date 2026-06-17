@@ -21,7 +21,15 @@ vi.mock('n8n-workflow', async () => {
 
 import { normalizePhoneNumberToE164 } from '../utils/phone';
 import { SinchProvider } from '../nodes/Sinch/providers/SinchProvider';
-import { makeSinchRequest, clearTokenCache } from '../utils/sinchHttp';
+import {
+  makeSinchRequest,
+  makeIssRequest,
+  makeProvisioningRequest,
+  clearTokenCache,
+  getConvAPIEndpoint,
+  getEconexusIssUrl,
+  buildSinchBuildProxyHeaders,
+} from '../utils/sinchHttp';
 import type { SinchCredentials } from '../nodes/Sinch/types';
 
 const helpers: any = {
@@ -135,14 +143,42 @@ describe('Phone Number Normalization', () => {
   });
 });
 
-describe('OAuth2.0 Token Management', () => {
-  beforeEach(() => {
-    nock.cleanAll();
-    clearTokenCache(); // Clear token cache between tests
+describe('Econexus URL helpers', () => {
+  it('builds Conversation API endpoints via Econexus proxy', () => {
+    expect(getConvAPIEndpoint('us', '/v1/projects/p1/messages:send')).toBe(
+      'https://au.app.api.sinch.com/v1/econexus/sinch-build/v1/projects/p1/messages:send',
+    );
+    expect(getConvAPIEndpoint('eu', 'projects/p1/messages')).toBe(
+      'https://eu.app.api.sinch.com/v1/econexus/sinch-build/v1/projects/p1/messages',
+    );
+    expect(getConvAPIEndpoint('br', '/v1/projects/p1/messages')).toBe(
+      'https://au.app.api.sinch.com/v1/econexus/sinch-build/v1/projects/p1/messages',
+    );
   });
 
-  it('fetches and caches OAuth2.0 token', async () => {
-    const authScope = nock('https://auth.sinch.com')
+  it('builds ISS subscription URLs', () => {
+    expect(getEconexusIssUrl('us')).toBe('https://au.app.api.sinch.com/v1/econexus/iss/subscriptions');
+    expect(getEconexusIssUrl('eu')).toBe('https://eu.app.api.sinch.com/v1/econexus/iss/subscriptions');
+  });
+
+  it('builds Sinch Build proxy headers', () => {
+    const headers = buildSinchBuildProxyHeaders(mockCredentials);
+    expect(headers['X-AUTH-SOURCE']).toBe('SINCH-BUILD');
+    expect(headers['X-SINCH-APP-ID']).toBe(mockCredentials.appId);
+    expect(headers['X-SINCH-PROJECT-ID']).toBe(mockCredentials.projectId);
+    expect(headers['X-CLIENT-SOURCE']).toBe('n8n-sinch-build');
+    expect(headers['X-CLIENT-SOURCE-VERSION']).toBeTruthy();
+  });
+});
+
+describe('Econexus proxy headers on requests', () => {
+  beforeEach(() => {
+    nock.cleanAll();
+    clearTokenCache();
+  });
+
+  it('sends proxy headers with Conversation API requests', async () => {
+    nock('https://us.auth.sinch.com')
       .post('/oauth2/token')
       .reply(200, {
         access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
@@ -150,8 +186,96 @@ describe('OAuth2.0 Token Management', () => {
         expires_in: 3600,
       });
 
-    const apiScope = nock('https://us.conversation.api.sinch.com')
-      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+    const apiScope = nock('https://au.app.api.sinch.com', {
+      reqheaders: {
+        'x-auth-source': 'SINCH-BUILD',
+        'x-sinch-app-id': mockCredentials.appId,
+        'x-sinch-project-id': mockCredentials.projectId,
+        'x-client-source': 'n8n-sinch-build',
+      },
+    })
+      .get('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+      .query(true)
+      .reply(200, { messages: [] });
+
+    const context = {
+      helpers,
+      getCredentials: async () => mockCredentials,
+    } as any;
+
+    await makeSinchRequest(context, {
+      method: 'GET',
+      endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages',
+      qs: { app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' },
+    });
+
+    expect(apiScope.isDone()).toBe(true);
+  });
+});
+
+describe('ISS requests', () => {
+  beforeEach(() => {
+    nock.cleanAll();
+    clearTokenCache();
+  });
+
+  it('creates ISS subscription', async () => {
+    nock('https://us.auth.sinch.com')
+      .post('/oauth2/token')
+      .reply(200, {
+        access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
+        token_type: 'Bearer',
+        expires_in: 3600,
+      });
+
+    const issScope = nock('https://au.app.api.sinch.com')
+      .post('/v1/econexus/iss/subscriptions', {
+        subscriptionType: 'HTTP',
+        targetPlatform: 'n8n',
+        providerId: 'sinchbuild',
+        eventTypes: ['MESSAGE_DELIVERY'],
+        targetUrl: 'https://example.com/webhook',
+      })
+      .reply(200, { subscriptionId: 'sub-123' });
+
+    const context = {
+      helpers,
+      getCredentials: async () => mockCredentials,
+    } as any;
+
+    const response = await makeIssRequest<{ subscriptionId: string }>(context, {
+      method: 'POST',
+      body: {
+        subscriptionType: 'HTTP',
+        targetPlatform: 'n8n',
+        providerId: 'sinchbuild',
+        eventTypes: ['MESSAGE_DELIVERY'],
+        targetUrl: 'https://example.com/webhook',
+      },
+    });
+
+    expect(response.subscriptionId).toBe('sub-123');
+    expect(issScope.isDone()).toBe(true);
+  });
+});
+
+describe('OAuth2.0 Token Management', () => {
+  beforeEach(() => {
+    nock.cleanAll();
+    clearTokenCache(); // Clear token cache between tests
+  });
+
+  it('fetches and caches OAuth2.0 token', async () => {
+    const authScope = nock('https://us.auth.sinch.com')
+      .post('/oauth2/token')
+      .reply(200, {
+        access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
+        token_type: 'Bearer',
+        expires_in: 3600,
+      });
+
+    const apiScope = nock('https://au.app.api.sinch.com')
+      .get('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
       .query(true) // Match any query params
       .reply(200, { messages: [] });
 
@@ -171,7 +295,7 @@ describe('OAuth2.0 Token Management', () => {
   });
 
   it('handles OAuth2.0 token fetch errors', async () => {
-    const authScope = nock('https://auth.sinch.com')
+    const authScope = nock('https://us.auth.sinch.com')
       .post('/oauth2/token')
       .reply(500, {
         error: 'internal_error',
@@ -195,7 +319,7 @@ describe('OAuth2.0 Token Management', () => {
   });
 
   it('uses cached token for subsequent requests', async () => {
-    const authScope = nock('https://auth.sinch.com')
+    const authScope = nock('https://us.auth.sinch.com')
       .post('/oauth2/token')
       .reply(200, {
         access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
@@ -203,13 +327,13 @@ describe('OAuth2.0 Token Management', () => {
         expires_in: 3600,
       });
 
-    const apiScope1 = nock('https://us.conversation.api.sinch.com')
-      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+    const apiScope1 = nock('https://au.app.api.sinch.com')
+      .get('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
       .query(true) // Match any query params
       .reply(200, { messages: [] });
 
-    const apiScope2 = nock('https://us.conversation.api.sinch.com')
-      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+    const apiScope2 = nock('https://au.app.api.sinch.com')
+      .get('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
       .query(true) // Match any query params
       .reply(200, { messages: [] });
 
@@ -245,7 +369,7 @@ describe('SinchProvider', () => {
 
   it('sends message successfully', async () => {
     // Mock OAuth2.0 token fetch
-    nock('https://auth.sinch.com')
+    nock('https://us.auth.sinch.com')
       .post('/oauth2/token')
       .reply(200, {
         access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
@@ -254,8 +378,8 @@ describe('SinchProvider', () => {
       });
 
     // Mock Send Message API
-    const sendScope = nock('https://us.conversation.api.sinch.com')
-      .post('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages:send', {
+    const sendScope = nock('https://au.app.api.sinch.com')
+      .post('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages:send', {
         app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN',
         recipient: {
           identified_by: {
@@ -294,7 +418,7 @@ describe('SinchProvider', () => {
   });
 
   it('handles OAuth2.0 errors', async () => {
-    nock('https://auth.sinch.com')
+    nock('https://us.auth.sinch.com')
       .post('/oauth2/token')
       .reply(401, {
         error: 'invalid_client',
@@ -314,7 +438,7 @@ describe('SinchProvider', () => {
   });
 
   it('handles API errors', async () => {
-    nock('https://auth.sinch.com')
+    nock('https://us.auth.sinch.com')
       .post('/oauth2/token')
       .reply(200, {
         access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
@@ -322,8 +446,8 @@ describe('SinchProvider', () => {
         expires_in: 3600,
       });
 
-    nock('https://us.conversation.api.sinch.com')
-      .post('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages:send')
+    nock('https://au.app.api.sinch.com')
+      .post('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages:send')
       .reply(400, {
         error: {
           code: 'INVALID_ARGUMENT',
@@ -345,7 +469,7 @@ describe('SinchProvider', () => {
   });
 
   it('sends message with optional fields (smsSender, callbackUrl, metadata)', async () => {
-    nock('https://auth.sinch.com')
+    nock('https://us.auth.sinch.com')
       .post('/oauth2/token')
       .reply(200, {
         access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
@@ -353,8 +477,8 @@ describe('SinchProvider', () => {
         expires_in: 3600,
       });
 
-    const sendScope = nock('https://us.conversation.api.sinch.com')
-      .post('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages:send', (body: any) => {
+    const sendScope = nock('https://au.app.api.sinch.com')
+      .post('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages:send', (body: any) => {
         // Verify all optional fields are included
         return body.channel_properties?.SMS_SENDER === 'TEST-SENDER' &&
                body.callback_url === 'https://example.com/callback' &&
@@ -388,7 +512,7 @@ describe('Regional Endpoints', () => {
   });
 
   it('uses US region endpoint', async () => {
-    nock('https://auth.sinch.com')
+    nock('https://us.auth.sinch.com')
       .post('/oauth2/token')
       .reply(200, {
         access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
@@ -396,8 +520,8 @@ describe('Regional Endpoints', () => {
         expires_in: 3600,
       });
 
-    const usScope = nock('https://us.conversation.api.sinch.com')
-      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+    const usScope = nock('https://au.app.api.sinch.com')
+      .get('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
       .query(true) // Match any query params
       .reply(200, { messages: [] });
 
@@ -416,7 +540,7 @@ describe('Regional Endpoints', () => {
   });
 
   it('uses EU region endpoint', async () => {
-    nock('https://auth.sinch.com')
+    nock('https://eu.auth.sinch.com')
       .post('/oauth2/token')
       .reply(200, {
         access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
@@ -424,8 +548,8 @@ describe('Regional Endpoints', () => {
         expires_in: 3600,
       });
 
-    const euScope = nock('https://eu.conversation.api.sinch.com')
-      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+    const euScope = nock('https://eu.app.api.sinch.com')
+      .get('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
       .query(true) // Match any query params
       .reply(200, { messages: [] });
 
@@ -444,7 +568,7 @@ describe('Regional Endpoints', () => {
   });
 
   it('uses BR region endpoint', async () => {
-    nock('https://auth.sinch.com')
+    nock('https://br.auth.sinch.com')
       .post('/oauth2/token')
       .reply(200, {
         access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
@@ -452,8 +576,8 @@ describe('Regional Endpoints', () => {
         expires_in: 3600,
       });
 
-    const brScope = nock('https://br.conversation.api.sinch.com')
-      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+    const brScope = nock('https://au.app.api.sinch.com')
+      .get('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
       .query(true) // Match any query params
       .reply(200, { messages: [] });
 
@@ -479,7 +603,7 @@ describe('Error Handling', () => {
   });
 
   it('handles 401 Unauthorized', async () => {
-    nock('https://auth.sinch.com')
+    nock('https://us.auth.sinch.com')
       .post('/oauth2/token')
       .reply(200, {
         access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
@@ -487,8 +611,8 @@ describe('Error Handling', () => {
         expires_in: 3600,
       });
 
-    nock('https://us.conversation.api.sinch.com')
-      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+    nock('https://au.app.api.sinch.com')
+      .get('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
       .query({ app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' })
       .reply(401, {
         error: {
@@ -512,7 +636,7 @@ describe('Error Handling', () => {
   });
 
   it('handles 404 Not Found', async () => {
-    nock('https://auth.sinch.com')
+    nock('https://us.auth.sinch.com')
       .post('/oauth2/token')
       .reply(200, {
         access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
@@ -520,8 +644,8 @@ describe('Error Handling', () => {
         expires_in: 3600,
       });
 
-    nock('https://us.conversation.api.sinch.com')
-      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+    nock('https://au.app.api.sinch.com')
+      .get('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
       .query({ app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' })
       .reply(404, {
         error: {
@@ -545,7 +669,7 @@ describe('Error Handling', () => {
   });
 
   it('handles errors with status field', async () => {
-    nock('https://auth.sinch.com')
+    nock('https://us.auth.sinch.com')
       .post('/oauth2/token')
       .reply(200, {
         access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
@@ -563,8 +687,8 @@ describe('Error Handling', () => {
       },
     };
 
-    nock('https://us.conversation.api.sinch.com')
-      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+    nock('https://au.app.api.sinch.com')
+      .get('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
       .query({ app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' })
       .reply(400, errorWithStatus);
 
@@ -591,7 +715,7 @@ describe('Error Handling', () => {
   });
 
   it('handles errors without status field', async () => {
-    nock('https://auth.sinch.com')
+    nock('https://us.auth.sinch.com')
       .post('/oauth2/token')
       .reply(200, {
         access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
@@ -599,8 +723,8 @@ describe('Error Handling', () => {
         expires_in: 3600,
       });
 
-    nock('https://us.conversation.api.sinch.com')
-      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+    nock('https://au.app.api.sinch.com')
+      .get('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
       .query({ app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' })
       .reply(500, {
         error: {
@@ -625,7 +749,7 @@ describe('Error Handling', () => {
   });
 
   it('handles errors with errorCode but no errorStatus', async () => {
-    nock('https://auth.sinch.com')
+    nock('https://us.auth.sinch.com')
       .post('/oauth2/token')
       .reply(200, {
         access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
@@ -633,8 +757,8 @@ describe('Error Handling', () => {
         expires_in: 3600,
       });
 
-    nock('https://us.conversation.api.sinch.com')
-      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+    nock('https://au.app.api.sinch.com')
+      .get('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
       .query({ app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' })
       .reply(400, {
         error: {
@@ -660,7 +784,7 @@ describe('Error Handling', () => {
 
   it('handles errors with both errorCode and errorStatus (explicit branch coverage)', async () => {
     // This test explicitly targets the errorStatus branch (lines 160-162)
-    nock('https://auth.sinch.com')
+    nock('https://us.auth.sinch.com')
       .post('/oauth2/token')
       .reply(200, {
         access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
@@ -677,8 +801,8 @@ describe('Error Handling', () => {
       },
     };
 
-    nock('https://us.conversation.api.sinch.com')
-      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
+    nock('https://au.app.api.sinch.com')
+      .get('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages')
       .query({ app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN' })
       .reply(422, errorResponse);
 
@@ -699,6 +823,298 @@ describe('Error Handling', () => {
       expect(error).toBeDefined();
       expect(error.message).toBeTruthy();
     }
+  });
+});
+
+describe('SinchProvider - sendWhatsAppTemplate', () => {
+  beforeEach(() => {
+    nock.cleanAll();
+    clearTokenCache();
+  });
+
+  it('sends WhatsApp template message successfully (no variables)', async () => {
+    nock('https://us.auth.sinch.com')
+      .post('/oauth2/token')
+      .reply(200, {
+        access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
+        token_type: 'Bearer',
+        expires_in: 3600,
+      });
+
+    const sendScope = nock('https://au.app.api.sinch.com')
+      .post('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages:send', {
+        app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN',
+        recipient: {
+          identified_by: {
+            channel_identities: [
+              {
+                channel: 'WHATSAPP',
+                identity: '+14155552671',
+                app_id: '01FAKETESTAPPIDABCDEFGHIJKLMN',
+              },
+            ],
+          },
+        },
+        message: {
+          template_message: {
+            channel_template: {
+              WHATSAPP: {
+                template_id: 'order_confirmation',
+                language_code: 'en',
+              },
+            },
+          },
+        },
+        channel_priority_order: ['WHATSAPP'],
+      })
+      .reply(200, {
+        message_id: 'msg-whatsapp-001',
+        accepted_time: '2024-06-01T10:00:00Z',
+      });
+
+    const provider = new SinchProvider();
+    const result = await provider.sendWhatsAppTemplate({
+      to: '+14155552671',
+      templateId: 'order_confirmation',
+      languageCode: 'en',
+      helpers,
+      credentials: mockCredentials,
+    });
+
+    expect(result.status).toBe('queued');
+    expect(result.messageId).toBe('msg-whatsapp-001');
+    expect(result.acceptedTime).toBe('2024-06-01T10:00:00Z');
+    expect(sendScope.isDone()).toBe(true);
+  });
+
+  it('sends WhatsApp template message with body variables', async () => {
+    nock('https://us.auth.sinch.com')
+      .post('/oauth2/token')
+      .reply(200, {
+        access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
+        token_type: 'Bearer',
+        expires_in: 3600,
+      });
+
+    const sendScope = nock('https://au.app.api.sinch.com')
+      .post(
+        '/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages:send',
+        (body: any) => {
+          const tmpl = body.message?.template_message?.channel_template?.WHATSAPP;
+          return (
+            tmpl?.template_id === 'delivery_update' &&
+            tmpl?.language_code === 'en' &&
+            tmpl?.parameters?.['body[1]text'] === 'John' &&
+            tmpl?.parameters?.['body[2]text'] === 'Thursday'
+          );
+        },
+      )
+      .reply(200, {
+        message_id: 'msg-whatsapp-002',
+        accepted_time: '2024-06-01T11:00:00Z',
+      });
+
+    const provider = new SinchProvider();
+    const result = await provider.sendWhatsAppTemplate({
+      to: '+14155552671',
+      templateId: 'delivery_update',
+      languageCode: 'EN',
+      parameters: {
+        'body[1]text': 'John',
+        'body[2]text': 'Thursday',
+      },
+      helpers,
+      credentials: mockCredentials,
+    });
+
+    expect(result.status).toBe('queued');
+    expect(result.messageId).toBe('msg-whatsapp-002');
+    expect(sendScope.isDone()).toBe(true);
+  });
+
+  it('lowercases the language code before sending', async () => {
+    nock('https://us.auth.sinch.com')
+      .post('/oauth2/token')
+      .reply(200, {
+        access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
+        token_type: 'Bearer',
+        expires_in: 3600,
+      });
+
+    const sendScope = nock('https://au.app.api.sinch.com')
+      .post(
+        '/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages:send',
+        (body: any) => {
+          const tmpl = body.message?.template_message?.channel_template?.WHATSAPP;
+          return tmpl?.language_code === 'en_us';
+        },
+      )
+      .reply(200, {
+        message_id: 'msg-whatsapp-003',
+        accepted_time: '2024-06-01T12:00:00Z',
+      });
+
+    const provider = new SinchProvider();
+    await provider.sendWhatsAppTemplate({
+      to: '+14155552671',
+      templateId: 'welcome',
+      languageCode: 'EN_US',
+      helpers,
+      credentials: mockCredentials,
+    });
+
+    expect(sendScope.isDone()).toBe(true);
+  });
+
+  it('handles API errors when sending WhatsApp template', async () => {
+    nock('https://us.auth.sinch.com')
+      .post('/oauth2/token')
+      .reply(200, {
+        access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
+        token_type: 'Bearer',
+        expires_in: 3600,
+      });
+
+    nock('https://au.app.api.sinch.com')
+      .post('/v1/econexus/sinch-build/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/messages:send')
+      .reply(400, {
+        error: {
+          code: 'INVALID_ARGUMENT',
+          message: 'Template not found',
+          status: 'INVALID_ARGUMENT',
+        },
+      });
+
+    const provider = new SinchProvider();
+    await expect(
+      provider.sendWhatsAppTemplate({
+        to: '+14155552671',
+        templateId: 'nonexistent_template',
+        languageCode: 'en',
+        helpers,
+        credentials: mockCredentials,
+      }),
+    ).rejects.toThrow();
+  });
+});
+
+describe('makeProvisioningRequest', () => {
+  beforeEach(() => {
+    nock.cleanAll();
+    clearTokenCache();
+  });
+
+  it('lists approved WhatsApp templates from Provisioning API', async () => {
+    nock('https://us.auth.sinch.com')
+      .post('/oauth2/token')
+      .reply(200, {
+        access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
+        token_type: 'Bearer',
+        expires_in: 3600,
+      });
+
+    const provisioningScope = nock('https://provisioning.api.sinch.com')
+      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/whatsapp/templates')
+      .query({ pageSize: '100', filterStates: 'APPROVED' })
+      .reply(200, {
+        templates: [
+          {
+            name: 'order_confirmation',
+            language: 'en',
+            state: 'APPROVED',
+            category: 'UTILITY',
+            details: {
+              components: [
+                { type: 'BODY', text: 'Your order {{1}} has been confirmed.', examples: ['12345'] },
+              ],
+            },
+          },
+          {
+            name: 'delivery_update',
+            language: 'en',
+            state: 'APPROVED',
+            category: 'UTILITY',
+          },
+        ],
+      });
+
+    const context = {
+      helpers,
+      getCredentials: async () => mockCredentials,
+    } as any;
+
+    const response = await makeProvisioningRequest<{ templates: any[] }>(context, {
+      method: 'GET',
+      endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/whatsapp/templates',
+      qs: { pageSize: 100, filterStates: 'APPROVED' },
+    });
+
+    expect(response.templates).toHaveLength(2);
+    expect(response.templates[0].name).toBe('order_confirmation');
+    expect(response.templates[1].name).toBe('delivery_update');
+    expect(provisioningScope.isDone()).toBe(true);
+  });
+
+  it('uses Provisioning API base URL regardless of region', async () => {
+    nock('https://eu.auth.sinch.com')
+      .post('/oauth2/token')
+      .reply(200, {
+        access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
+        token_type: 'Bearer',
+        expires_in: 3600,
+      });
+
+    // Provisioning URL should be the same for EU region credentials
+    const provisioningScope = nock('https://provisioning.api.sinch.com')
+      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/whatsapp/templates')
+      .query(true)
+      .reply(200, { templates: [] });
+
+    const context = {
+      helpers,
+      getCredentials: async () => ({ ...mockCredentials, region: 'eu' }),
+    } as any;
+
+    await makeProvisioningRequest(context, {
+      method: 'GET',
+      endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/whatsapp/templates',
+      qs: { pageSize: 100, filterStates: 'APPROVED' },
+    });
+
+    expect(provisioningScope.isDone()).toBe(true);
+  });
+
+  it('throws on Provisioning API error', async () => {
+    nock('https://us.auth.sinch.com')
+      .post('/oauth2/token')
+      .reply(200, {
+        access_token: 'FAKE-TOKEN-1234567890ABCDEFGHIJKLMNOP',
+        token_type: 'Bearer',
+        expires_in: 3600,
+      });
+
+    nock('https://provisioning.api.sinch.com')
+      .get('/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/whatsapp/templates')
+      .query(true)
+      .reply(403, {
+        error: {
+          code: 'PERMISSION_DENIED',
+          message: 'Insufficient permissions',
+        },
+      });
+
+    const context = {
+      helpers,
+      getCredentials: async () => mockCredentials,
+    } as any;
+
+    await expect(
+      makeProvisioningRequest(context, {
+        method: 'GET',
+        endpoint: '/v1/projects/FAKE-PROJECT-ID-22222222-2222-2222-2222-222222222222/whatsapp/templates',
+        qs: { pageSize: 100, filterStates: 'APPROVED' },
+      }),
+    ).rejects.toThrow();
   });
 });
 

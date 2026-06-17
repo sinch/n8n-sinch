@@ -1,6 +1,7 @@
 import type { IExecuteFunctions, IHookFunctions, ILoadOptionsFunctions, IHttpRequestOptions } from 'n8n-workflow';
 import type { SinchCredentials, OAuth2TokenResponse, SinchRegion } from '../nodes/Sinch/types';
 import { SinchApiError } from './errors';
+import { version as connectorVersion } from '../package.json';
 
 // Token cache (in-memory, keyed by credentials)
 const tokenCache = new Map<string, { token: string; expiresAt: number }>();
@@ -11,11 +12,61 @@ export function clearTokenCache(): void {
 }
 
 /**
+ * Econexus public API host prefix for a Sinch Conversation API region.
+ * US and BR Conv API apps route via AU; EU via EU.
+ */
+function getEconexusHostPrefix(region: SinchRegion): 'au' | 'eu' {
+  return region === 'eu' ? 'eu' : 'au';
+}
+
+/**
+ * Return the Econexus base URL for a given region.
+ */
+export function getEconexusBaseUrl(region: SinchRegion): string {
+  return `https://${getEconexusHostPrefix(region)}.app.api.sinch.com`;
+}
+
+/**
+ * Return a Conversation API endpoint via the Econexus Sinch Build proxy.
+ */
+export function getConvAPIEndpoint(region: SinchRegion, path: string): string {
+  const resourcePath = path.replace(/^\//, '').replace(/^v1\//, '');
+  return `${getEconexusBaseUrl(region)}/v1/econexus/sinch-build/v1/${resourcePath}`;
+}
+
+/**
+ * Return the Econexus ISS subscriptions URL for a given region.
+ */
+export function getEconexusIssUrl(region: SinchRegion): string {
+  return `${getEconexusBaseUrl(region)}/v1/econexus/iss/subscriptions`;
+}
+
+/**
+ * Regional OAuth2 token endpoint.
+ */
+function getAuthUrl(region: SinchRegion): string {
+  return `https://${region}.auth.sinch.com/oauth2/token`;
+}
+
+/**
+ * Headers required by the Econexus Sinch Build proxy.
+ */
+export function buildSinchBuildProxyHeaders(credentials: SinchCredentials): Record<string, string> {
+  return {
+    'X-AUTH-SOURCE': 'SINCH-BUILD',
+    'X-SINCH-APP-ID': credentials.appId,
+    'X-SINCH-PROJECT-ID': credentials.projectId,
+    'X-CLIENT-SOURCE': 'n8n-sinch-build',
+    'X-CLIENT-SOURCE-VERSION': connectorVersion,
+  };
+}
+
+/**
  * Get OAuth2.0 access token for Sinch Conversations API.
  * Caches tokens until they expire (typically 1 hour).
  * Uses 55-minute cache (5-minute buffer before expiry).
  */
-async function getAccessToken(
+export async function getAccessToken(
   context: IHookFunctions | IExecuteFunctions | ILoadOptionsFunctions,
   credentials: SinchCredentials,
 ): Promise<string> {
@@ -24,20 +75,17 @@ async function getAccessToken(
   const cached = tokenCache.get(cacheKey);
 
   // Return cached token if still valid (with 5-minute buffer)
-  // This ensures we refresh tokens before they expire
   if (cached && cached.expiresAt > Date.now() + 5 * 60 * 1000) {
     return cached.token;
   }
 
   try {
-    // Use form-encoded body as string (like the test script does)
-    // This avoids conflicts between 'form' and 'json' properties in n8n's httpRequest
     const formBody = 'grant_type=client_credentials';
     const authHeader = `Basic ${Buffer.from(`${credentials.keyId}:${credentials.keySecret}`).toString('base64')}`;
 
     const requestOptions: IHttpRequestOptions = {
       method: 'POST',
-      url: 'https://auth.sinch.com/oauth2/token',
+      url: getAuthUrl(credentials.region),
       body: formBody,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -48,12 +96,10 @@ async function getAccessToken(
 
     const response = await context.helpers.httpRequest(requestOptions) as OAuth2TokenResponse;
 
-    // Cache the token with 55-minute expiry (5-minute buffer before actual expiry)
-    // expires_in is typically 3600 seconds (1 hour)
     const tokenExpirySeconds = response.expires_in || 3600;
-    const cacheExpirySeconds = Math.max(tokenExpirySeconds - 300, 3300); // 55 minutes minimum
+    const cacheExpirySeconds = Math.max(tokenExpirySeconds - 300, 3300);
     const expiresAt = Date.now() + (cacheExpirySeconds * 1000);
-    
+
     tokenCache.set(cacheKey, {
       token: response.access_token,
       expiresAt,
@@ -71,24 +117,128 @@ async function getAccessToken(
   }
 }
 
-/**
- * Get the base URL for the Sinch Conversations API based on region.
- */
-function getBaseUrl(region: SinchRegion): string {
-  const baseUrls: Record<SinchRegion, string> = {
-    us: 'https://us.conversation.api.sinch.com',
-    eu: 'https://eu.conversation.api.sinch.com',
-    br: 'https://br.conversation.api.sinch.com',
+type SinchRequestContext = IHookFunctions | IExecuteFunctions | ILoadOptionsFunctions;
+
+async function buildAuthenticatedRequestOptions(
+  context: SinchRequestContext,
+  credentials: SinchCredentials,
+  options: {
+    method: 'GET' | 'POST' | 'DELETE' | 'PUT' | 'PATCH';
+    url: string;
+    body?: IHttpRequestOptions['body'];
+    qs?: IHttpRequestOptions['qs'];
+  },
+): Promise<IHttpRequestOptions> {
+  const accessToken = await getAccessToken(context, credentials);
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    ...buildSinchBuildProxyHeaders(credentials),
   };
-  return baseUrls[region] || baseUrls.us;
+
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+
+  return {
+    method: options.method,
+    url: options.url,
+    body: options.body,
+    qs: options.qs,
+    headers,
+    timeout: 30000,
+  };
+}
+
+function handleSinchRequestError(error: unknown): never {
+  const err = error as Record<string, unknown>;
+  const resp = (err.response as Record<string, unknown>)?.body ?? err.error ?? err;
+  const respError = (resp as Record<string, unknown>)?.error as Record<string, unknown> | undefined;
+  const errorCode = String(respError?.code ?? err.statusCode ?? '');
+  const errorMessage = String(respError?.message ?? err.message ?? 'Unknown error');
+  const errorStatus = respError?.status ? String(respError.status) : undefined;
+
+  let detailedMessage = `Sinch Conversations API error: ${errorMessage}`;
+  if (errorCode) {
+    detailedMessage += ` (Status: ${errorCode})`;
+  }
+  if (errorStatus) {
+    detailedMessage += ` [${errorStatus}]`;
+  }
+
+  throw new SinchApiError(
+    detailedMessage,
+    errorCode ? Number(errorCode) || undefined : undefined,
+    errorStatus,
+    resp,
+  );
+}
+
+const PROVISIONING_API_BASE = 'https://provisioning.api.sinch.com';
+
+/**
+ * Make an authenticated request to the Sinch Provisioning API.
+ * Uses the same OAuth2.0 token as the Conversations API.
+ * Base URL is always https://provisioning.api.sinch.com (region-independent).
+ */
+export async function makeProvisioningRequest<T = unknown>(
+  context: IHookFunctions | IExecuteFunctions | ILoadOptionsFunctions,
+  options: {
+    method: 'GET' | 'POST' | 'DELETE' | 'PUT' | 'PATCH';
+    endpoint: string; // e.g., '/v1/projects/{project_id}/whatsapp/templates'
+    body?: IHttpRequestOptions['body'];
+    qs?: IHttpRequestOptions['qs'];
+  },
+): Promise<T> {
+  const credentials = (await context.getCredentials('sinchApi')) as SinchCredentials;
+  const accessToken = await getAccessToken(context, credentials);
+
+  const url = `${PROVISIONING_API_BASE}${options.endpoint}`;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+
+  if (accessToken) {
+    headers['Authorization'] = `Bearer ${accessToken}`;
+  }
+
+  const requestOptions: IHttpRequestOptions = {
+    method: options.method,
+    url,
+    body: options.body,
+    qs: options.qs,
+    headers,
+    timeout: 30000,
+  };
+
+  try {
+    const response = await context.helpers.httpRequest(requestOptions);
+    return response as T;
+  } catch (error: unknown) {
+    const err = error as Record<string, unknown>;
+    const resp = (err.response as Record<string, unknown>)?.body ?? err.error ?? err;
+    const respError = (resp as Record<string, unknown>)?.error as Record<string, unknown> | undefined;
+    const errorCode = String(respError?.code ?? err.statusCode ?? '');
+    const errorMessage = String(respError?.message ?? err.message ?? 'Unknown error');
+
+    throw new SinchApiError(
+      `Sinch Provisioning API error: ${errorMessage}`,
+      errorCode ? Number(errorCode) || undefined : undefined,
+      undefined,
+      resp,
+    );
+  }
 }
 
 /**
- * Make an authenticated request to the Sinch API.
+ * Make an authenticated request to the Sinch API via Econexus.
  * Handles OAuth2.0 token management and regional endpoints.
  */
 export async function makeSinchRequest<T = unknown>(
-  context: IHookFunctions | IExecuteFunctions | ILoadOptionsFunctions,
+  context: SinchRequestContext,
   options: {
     method: 'GET' | 'POST' | 'DELETE' | 'PUT' | 'PATCH';
     endpoint: string; // e.g., '/v1/projects/{project_id}/messages:send'
@@ -96,65 +246,49 @@ export async function makeSinchRequest<T = unknown>(
     qs?: IHttpRequestOptions['qs'];
   },
 ): Promise<T> {
-  // Get credentials
   const credentials = (await context.getCredentials('sinchApi')) as SinchCredentials;
+  const url = getConvAPIEndpoint(credentials.region, options.endpoint);
 
-  // Get OAuth2.0 access token
-  const accessToken = await getAccessToken(context, credentials);
-
-  // Build full URL
-  const baseUrl = getBaseUrl(credentials.region);
-  const url = `${baseUrl}${options.endpoint}`;
-
-  // Prepare headers
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-    'Accept': 'application/json',
-  };
-
-  // Add OAuth2.0 Bearer token authentication
-  if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
-  }
-
-  // Make request
-  const requestOptions: IHttpRequestOptions = {
+  const requestOptions = await buildAuthenticatedRequestOptions(context, credentials, {
     method: options.method,
     url,
     body: options.body,
     qs: options.qs,
-    headers,
-    timeout: 30000, // 30s timeout for Conversations API
-  };
+  });
 
   try {
     const response = await context.helpers.httpRequest(requestOptions);
-
     return response as T;
   } catch (error: unknown) {
-    // Parse Sinch API error format
-    const err = error as Record<string, unknown>;
-    const resp = (err.response as Record<string, unknown>)?.body ?? err.error ?? err;
-    const respError = (resp as Record<string, unknown>)?.error as Record<string, unknown> | undefined;
-    const errorCode = String(respError?.code ?? err.statusCode ?? '');
-    const errorMessage = String(respError?.message ?? err.message ?? 'Unknown error');
-    const errorStatus = respError?.status ? String(respError.status) : undefined;
-
-    // Build detailed error message
-    let detailedMessage = `Sinch Conversations API error: ${errorMessage}`;
-    if (errorCode) {
-      detailedMessage += ` (Status: ${errorCode})`;
-    }
-    if (errorStatus) {
-      detailedMessage += ` [${errorStatus}]`;
-    }
-
-    throw new SinchApiError(
-      detailedMessage,
-      errorCode ? Number(errorCode) || undefined : undefined,
-      errorStatus,
-      resp,
-    );
+    return handleSinchRequestError(error);
   }
 }
 
+/**
+ * Make an authenticated request to the Econexus ISS API.
+ */
+export async function makeIssRequest<T = unknown>(
+  context: SinchRequestContext,
+  options: {
+    method: 'GET' | 'POST' | 'DELETE' | 'PUT' | 'PATCH';
+    subscriptionId?: string;
+    body?: IHttpRequestOptions['body'];
+  },
+): Promise<T> {
+  const credentials = (await context.getCredentials('sinchApi')) as SinchCredentials;
+  const baseUrl = getEconexusIssUrl(credentials.region);
+  const url = options.subscriptionId ? `${baseUrl}/${options.subscriptionId}` : baseUrl;
+
+  const requestOptions = await buildAuthenticatedRequestOptions(context, credentials, {
+    method: options.method,
+    url,
+    body: options.body,
+  });
+
+  try {
+    const response = await context.helpers.httpRequest(requestOptions);
+    return response as T;
+  } catch (error: unknown) {
+    return handleSinchRequestError(error);
+  }
+}

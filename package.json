@@ -1,6 +1,6 @@
 {
   "name": "@sinch/n8n-nodes-sinch",
-  "version": "1.0.0-alpha.8",
+  "version": "1.1.0",
   "description": "n8n community node for Sinch Conversations API - send and manage omnichannel messages",
   "keywords": [
     "n8n-community-node-package",
@@ -33,7 +33,8 @@
     "n8nNodesApiVersion": 1,
     "strict": true,
     "nodes": [
-      "dist/nodes/Sinch/Sinch.node.js"
+      "dist/nodes/Sinch/Sinch.node.js",
+      "dist/nodes/Sinch/SinchTrigger.node.js"
     ],
     "credentials": [
       "dist/credentials/SinchApi.credentials.js"
@@ -59,7 +60,6 @@
     "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:no-coverage": "vitest run",
-    "prepare": "npm run build",
     "prepublishOnly": "npm run build && npm run lint"
   },
   "devDependencies": {

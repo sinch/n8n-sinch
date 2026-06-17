@@ -21,6 +21,39 @@ export interface OAuth2TokenResponse {
   expires_in: number;
 }
 
+// WhatsApp template message types
+export interface WhatsAppChannelTemplate {
+  template_id: string;
+  language_code: string;
+  parameters?: Record<string, string>;
+}
+
+export interface TemplateMessage {
+  channel_template: {
+    WHATSAPP: WhatsAppChannelTemplate;
+  };
+}
+
+// WhatsApp template from Provisioning API
+export interface WhatsAppTemplate {
+  name: string;
+  language: string;
+  state?: string;
+  category?: string;
+  details?: {
+    components?: Array<{
+      type: string;
+      text?: string;
+      examples?: string[];
+    }>;
+  };
+}
+
+export interface ListTemplatesResponse {
+  templates: WhatsAppTemplate[];
+  next_page_token?: string;
+}
+
 // Send message request structure (to Sinch API)
 export interface SendMessageRequest {
   app_id: string;
@@ -29,6 +62,7 @@ export interface SendMessageRequest {
       channel_identities: Array<{
         channel: SinchChannel;
         identity: string;
+        app_id?: string;
       }>;
     };
     contact_id?: string;
@@ -37,6 +71,7 @@ export interface SendMessageRequest {
     text_message?: {
       text: string;
     };
+    template_message?: TemplateMessage;
   };
   channel_priority_order?: SinchChannel[];
   channel_properties?: {
@@ -145,5 +180,60 @@ export interface ProviderSendResult {
   raw?: unknown;
   requestBody?: unknown; // Request body for debugging
   error?: string;
+}
+
+// ISS subscription response
+export interface IssSubscriptionResponse {
+  subscriptionId: string;
+}
+
+// Webhook data stored by n8n for ISS lifecycle
+export interface SinchWebhookData {
+  subscriptionId?: string;
+}
+
+// Inbound MESSAGE_DELIVERY webhook payload
+export interface MessageDeliveryWebhook {
+  app_id?: string;
+  project_id?: string;
+  event_time?: string;
+  accepted_time?: string;
+  message_delivery_report?: {
+    message_id: string;
+    conversation_id: string;
+    status: string;
+    channel_identity: {
+      channel: SinchChannel;
+      identity: string;
+      app_id?: string;
+    };
+    contact_id?: string;
+    metadata?: string;
+  };
+}
+
+// Normalized message delivery trigger output
+export interface MessageDeliveryOutput {
+  messageId: string;
+  conversationId: string;
+  deliveryStatus: string;
+  channel: string;
+  contactIdentity: string;
+  contactId: string;
+  appId: string;
+  projectId: string;
+  eventTime: string;
+  acceptedTime: string;
+  metadata: string;
+}
+
+// Provider send WhatsApp template parameters
+export interface ProviderSendWhatsAppParams {
+  to: string;
+  templateId: string;
+  languageCode: string;
+  parameters?: Record<string, string>;
+  helpers: IExecuteFunctions['helpers'];
+  credentials: SinchCredentials;
 }
 
