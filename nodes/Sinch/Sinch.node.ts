@@ -1,6 +1,8 @@
 import type {
   IExecuteFunctions,
+  ILoadOptionsFunctions,
   INodeExecutionData,
+  INodeListSearchResult,
   INodeType,
   INodeTypeDescription,
   IDataObject,
@@ -9,9 +11,21 @@ import type {
 import { NodeApiError, NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 import { normalizePhoneNumberToE164 } from '../../utils/phone';
 import { SinchProvider } from './providers/SinchProvider';
-import { makeSinchRequest } from '../../utils/sinchHttp';
-import type { SinchCredentials, SinchChannel, ListMessagesResponse, ListMessagesParams } from './types';
+import { makeSinchRequest, makeProvisioningRequest } from '../../utils/sinchHttp';
+import type {
+  SinchCredentials,
+  SinchChannel,
+  ListMessagesResponse,
+  ListMessagesParams,
+  ListTemplatesResponse,
+  WhatsAppTemplate,
+} from './types';
 import { getNames } from '../../utils/countryCodes';
+import {
+  buildTemplateVariableCountOptions,
+  getTemplateBodyVariables,
+} from '../../utils/whatsappTemplate';
+import { buildWhatsAppTemplateVariableFields } from '../../utils/whatsappTemplateProperties';
 
 // Generate country list for dropdown (sorted alphabetically by name)
 function getCountryOptions() {
@@ -73,17 +87,24 @@ export class Sinch implements INodeType {
         },
         options: [
           {
+            name: 'Get Many',
+            value: 'getMany',
+            description: 'Retrieve messages from conversations',
+            action: 'Get many messages',
+          },
+          {
             name: 'Send',
             value: 'send',
             description: 'Send an SMS message via Conversations API',
             action: 'Send a message',
           },
           {
-            name: 'Get Many',
-            value: 'getMany',
-            description: 'Retrieve messages from conversations',
-            action: 'Get many messages',
-          }
+            name: 'Send WhatsApp Template',
+            value: 'sendWhatsAppTemplate',
+            description: 'Send an approved WhatsApp template message via Conversations API',
+            // eslint-disable-next-line n8n-nodes-base/node-param-operation-option-action-miscased -- WhatsApp is a product name
+            action: 'Send a WhatsApp template message',
+          },
         ],
         default: 'send',
       },
@@ -178,6 +199,62 @@ export class Sinch implements INodeType {
           },
         ],
       },
+
+      // SEND WHATSAPP TEMPLATE FIELDS
+      {
+        displayName: 'To',
+        name: 'whatsappTo',
+        type: 'string',
+        required: true,
+        default: '',
+        description: 'Recipient WhatsApp phone number in E.164 format (e.g. +14155552671)',
+        placeholder: 'e.g. +14155552671',
+        displayOptions: {
+          show: {
+            resource: ['message'],
+            operation: ['sendWhatsAppTemplate'],
+          },
+        },
+      },
+      {
+        displayName: 'WhatsApp Template Name or ID',
+        name: 'whatsappTemplateId',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getWhatsAppTemplates',
+        },
+        required: true,
+        default: '',
+        description:
+          'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+        hint: 'Only APPROVED templates. Value format: templateName,languageCode',
+        displayOptions: {
+          show: {
+            resource: ['message'],
+            operation: ['sendWhatsAppTemplate'],
+          },
+        },
+      },
+      {
+        displayName: 'Template Body Variable Count Name or ID',
+        name: 'templateVariableCount',
+        type: 'options',
+        typeOptions: {
+          loadOptionsMethod: 'getWhatsAppTemplateVariableCount',
+          loadOptionsDependsOn: ['whatsappTemplateId'],
+        },
+        default: '0',
+        description:
+          'Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>',
+        hint: 'Auto-loaded when you change WhatsApp Template Name or ID. Controls how many {{N}} variable fields appear below',
+        displayOptions: {
+          show: {
+            resource: ['message'],
+            operation: ['sendWhatsAppTemplate'],
+          },
+        },
+      },
+      ...buildWhatsAppTemplateVariableFields(),
 
       // LIST MESSAGES - RETURN ALL / LIMIT
       {
@@ -281,6 +358,58 @@ export class Sinch implements INodeType {
     ],
   };
 
+  methods = {
+    loadOptions: {
+      async getWhatsAppTemplates(this: ILoadOptionsFunctions): Promise<INodeListSearchResult['results']> {
+        const credentials = (await this.getCredentials('sinchApi')) as SinchCredentials;
+        const response = await makeProvisioningRequest<ListTemplatesResponse>(this, {
+          method: 'GET',
+          endpoint: `/v1/projects/${credentials.projectId}/whatsapp/templates`,
+          qs: { pageSize: 100, filterStates: 'APPROVED' },
+        });
+
+        const templates = response.templates || [];
+        return templates
+          .map((t) => ({
+            name: `${t.name} (${t.language})`,
+            value: `${t.name},${t.language}`,
+          }))
+          .sort((a, b) => a.name.localeCompare(b.name));
+      },
+
+      async getWhatsAppTemplateVariableCount(
+        this: ILoadOptionsFunctions,
+      ): Promise<INodeListSearchResult['results']> {
+        const templateValue = this.getCurrentNodeParameter('whatsappTemplateId') as string;
+
+        if (!templateValue) {
+          return [{ name: 'Select a WhatsApp Template First', value: '0' }];
+        }
+
+        const [templateName, languageCode] = templateValue.split(',').map((s) => s.trim());
+        if (!templateName || !languageCode) {
+          return [{ name: 'Invalid Template Selection', value: '0' }];
+        }
+
+        try {
+          const credentials = (await this.getCredentials('sinchApi')) as SinchCredentials;
+          const template = await makeProvisioningRequest<WhatsAppTemplate>(this, {
+            method: 'GET',
+            endpoint: `/v1/projects/${credentials.projectId}/whatsapp/templates/${templateName}/languages/${languageCode}`,
+          });
+
+          const variables = getTemplateBodyVariables(template);
+          return buildTemplateVariableCountOptions(variables);
+        } catch {
+          return [{
+            name: 'Could Not Load Template Variables — Re-Select the Template or Check Credentials',
+            value: '0',
+          }];
+        }
+      },
+    },
+  };
+
   async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
     const items = this.getInputData();
     const returnData: INodeExecutionData[] = [];
@@ -344,6 +473,80 @@ export class Sinch implements INodeType {
                 message,
                 provider: 'Sinch Conversations',
                 channel: 'SMS',
+                raw: providerResult.raw,
+              } as unknown as IDataObject,
+              pairedItem: { item: itemIndex },
+            });
+          } catch (error) {
+            throw new NodeApiError(this.getNode(), error as JsonObject, {
+              message: (error as Error).message,
+              itemIndex,
+            });
+          }
+        } else if (operation === 'sendWhatsAppTemplate') {
+          // SEND WHATSAPP TEMPLATE OPERATION
+          const toRaw = this.getNodeParameter('whatsappTo', itemIndex) as string;
+          const templateValue = this.getNodeParameter('whatsappTemplateId', itemIndex) as string;
+          const variableCount = parseInt(
+            this.getNodeParameter('templateVariableCount', itemIndex, '0') as string,
+            10,
+          ) || 0;
+
+          // Validate E.164 phone number
+          const toResult = normalizePhoneNumberToE164(toRaw, undefined);
+          if (!toResult.ok) {
+            throw new NodeOperationError(
+              this.getNode(),
+              `Invalid phone number: ${toResult.error}`,
+              { itemIndex },
+            );
+          }
+
+          if (!templateValue) {
+            throw new NodeOperationError(
+              this.getNode(),
+              'A WhatsApp template must be selected',
+              { itemIndex },
+            );
+          }
+
+          const [templateId, languageCode] = templateValue.split(',').map((s) => s.trim());
+          if (!templateId || !languageCode) {
+            throw new NodeOperationError(
+              this.getNode(),
+              'Invalid template selection — expected "templateName,languageCode"',
+              { itemIndex },
+            );
+          }
+
+          const parameters: Record<string, string> = {};
+          for (let i = 1; i <= variableCount; i++) {
+            const val = this.getNodeParameter(`var${i}`, itemIndex, '') as string;
+            if (val) {
+              parameters[`body[${i}]text`] = val;
+            }
+          }
+
+          try {
+            const providerResult = await provider.sendWhatsAppTemplate({
+              to: toResult.value,
+              templateId,
+              languageCode,
+              parameters: Object.keys(parameters).length > 0 ? parameters : undefined,
+              helpers: this.helpers,
+              credentials,
+            });
+
+            returnData.push({
+              json: {
+                messageId: providerResult.messageId,
+                status: providerResult.status,
+                acceptedTime: providerResult.acceptedTime,
+                to: toResult.value,
+                templateId,
+                languageCode,
+                provider: 'Sinch Conversations',
+                channel: 'WHATSAPP',
                 raw: providerResult.raw,
               } as unknown as IDataObject,
               pairedItem: { item: itemIndex },

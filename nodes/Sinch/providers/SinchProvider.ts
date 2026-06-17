@@ -6,6 +6,7 @@ import type {
   SendMessageResponse,
   ProviderSendParams,
   ProviderSendResult,
+  ProviderSendWhatsAppParams,
 } from '../types';
 
 export class SinchProvider {
@@ -66,6 +67,66 @@ export class SinchProvider {
         acceptedTime: response.accepted_time,
         raw: response,
         requestBody, // Include request body for debugging
+      };
+    } catch (err) {
+      const error = err as { statusCode?: number; message?: string; response?: unknown };
+      throw new ProviderHttpError(
+        error.message || 'Sinch API request failed',
+        error.statusCode,
+        error.response,
+      );
+    }
+  }
+
+  async sendWhatsAppTemplate(params: ProviderSendWhatsAppParams): Promise<ProviderSendResult> {
+    const { to, templateId, languageCode, parameters, helpers, credentials } = params;
+
+    const whatsappTemplate: SendMessageRequest['message']['template_message'] = {
+      channel_template: {
+        WHATSAPP: {
+          template_id: templateId,
+          language_code: languageCode.toLowerCase(),
+          ...(parameters && Object.keys(parameters).length > 0 ? { parameters } : {}),
+        },
+      },
+    };
+
+    const requestBody: SendMessageRequest = {
+      app_id: credentials.appId,
+      recipient: {
+        identified_by: {
+          channel_identities: [
+            {
+              channel: 'WHATSAPP',
+              identity: to,
+              app_id: credentials.appId,
+            },
+          ],
+        },
+      },
+      message: {
+        template_message: whatsappTemplate,
+      },
+      channel_priority_order: ['WHATSAPP'],
+    };
+
+    const endpoint = `/v1/projects/${credentials.projectId}/messages:send`;
+
+    try {
+      const context = { helpers, getCredentials: async () => credentials } as unknown as IExecuteFunctions;
+
+      const response = await makeSinchRequest<SendMessageResponse>(context, {
+        method: 'POST',
+        endpoint,
+        body: requestBody,
+      });
+
+      return {
+        status: 'queued',
+        messageId: response.message_id,
+        acceptedTime: response.accepted_time,
+        raw: response,
+        requestBody,
       };
     } catch (err) {
       const error = err as { statusCode?: number; message?: string; response?: unknown };

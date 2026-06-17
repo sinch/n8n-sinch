@@ -25,8 +25,10 @@ npm install @sinch/n8n-nodes-sinch
 
 ## Features
 
-- **Send SMS messages** via Sinch Conversations API
+- **Send SMS messages** via Sinch Conversations API (routed through Econexus)
+- **Send WhatsApp Template Message** with approved templates from Sinch Provisioning API
 - **Get Many messages** with filtering and pagination
+- **Message Delivered trigger** via Econexus ISS webhook subscriptions
 - **OAuth2.0 authentication** with automatic token management
 - **Multi-region support** (US, EU, BR)
 - **Phone number normalization** to E.164 format
@@ -56,6 +58,21 @@ Send SMS messages via Sinch Conversations API.
 - **Callback URL** (optional) - Webhook URL for delivery status updates
 - **Metadata** (optional) - Custom metadata to associate with the message (up to 1024 characters)
 
+#### Send WhatsApp Template Message
+
+Send an approved WhatsApp template via Sinch Conversation API. Templates are loaded from the Sinch Provisioning API; body placeholders (`{{1}}`, `{{2}}`, …) are shown as input fields after you select a template.
+
+**Fields:**
+- **To** (required) - Recipient WhatsApp number in E.164 format (e.g., +14155552671)
+- **WhatsApp Template Name or ID** (required) - Approved template from your Sinch project (value format: `templateName,languageCode`)
+- **Template Body Variable Count Name or ID** - Auto-loaded when the template changes; lists how many body variables the template expects
+- **Variable {{1}}** … **Variable {{20}}** - Shown based on the template variable count (up to 20 placeholders)
+
+**API endpoints used:**
+- List templates: `GET https://provisioning.api.sinch.com/v1/projects/{projectId}/whatsapp/templates?filterStates=APPROVED`
+- Template detail: `GET .../whatsapp/templates/{name}/languages/{language}`
+- Send: `POST https://{au|eu}.app.api.sinch.com/v1/econexus/sinch-build/v1/projects/{projectId}/messages:send`
+
 #### Get Many Messages
 
 Retrieve and filter messages from conversations.
@@ -71,6 +88,18 @@ Retrieve and filter messages from conversations.
 - **End Time** - Filter messages before this timestamp
 - **Page Size** - Number of messages per page (max 1000, default: 10)
 - **Channel** - Filter by channel (SMS, WhatsApp, RCS)
+
+### Sinch Trigger
+
+Webhook trigger for message delivery events.
+
+**Events:**
+- **Message Delivered** - Fires when a `MESSAGE_DELIVERY` webhook is received with status `DELIVERED`
+
+When a workflow is activated, the trigger registers an ISS subscription with Econexus. When the workflow is deactivated, the subscription is removed automatically.
+
+**Output fields:**
+- `messageId`, `conversationId`, `deliveryStatus`, `channel`, `contactIdentity`, `contactId`, `appId`, `projectId`, `eventTime`, `acceptedTime`, `metadata`
 
 ## Credentials
 
@@ -95,9 +124,15 @@ Retrieve and filter messages from conversations.
 
 ## API Endpoints
 
-- **US**: `https://us.conversation.api.sinch.com`
-- **EU**: `https://eu.conversation.api.sinch.com`
-- **BR**: `https://br.conversation.api.sinch.com`
+All Conversation API requests are routed through the Econexus Sinch Build proxy:
+
+- **US / BR**: `https://au.app.api.sinch.com/v1/econexus/sinch-build`
+- **EU**: `https://eu.app.api.sinch.com/v1/econexus/sinch-build`
+
+ISS webhook subscriptions:
+
+- **US / BR**: `https://au.app.api.sinch.com/v1/econexus/iss/subscriptions`
+- **EU**: `https://eu.app.api.sinch.com/v1/econexus/iss/subscriptions`
 
 ### Send Message
 
@@ -152,10 +187,11 @@ Retrieve and filter messages from conversations.
 ## Authentication
 
 OAuth2.0 authentication is automatically handled:
-1. Tokens are fetched from `https://auth.sinch.com/oauth2/token`
+1. Tokens are fetched from `https://{region}.auth.sinch.com/oauth2/token`
 2. Tokens are cached for 55 minutes (5-minute buffer before expiry)
 3. Tokens are automatically refreshed when expired
 4. Bearer tokens are used in Authorization headers
+5. Econexus proxy headers (`X-AUTH-SOURCE`, `X-SINCH-APP-ID`, `X-SINCH-PROJECT-ID`, `X-CLIENT-SOURCE`) are sent on all Econexus requests
 
 ## Phone Number Format
 
